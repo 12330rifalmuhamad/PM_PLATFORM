@@ -14,8 +14,8 @@ import TranslationWrapper from '@/hocs/TranslationWrapper'
 import { i18n } from '@configs/i18n'
 
 // Util Imports
-// HAPUS IMPOR DARI SERVERHELPERS
-// import { getSystemMode } from '@core/utils/serverHelpers'
+// Util Imports
+import { getSystemMode } from '@core/utils/serverHelpers'
 
 // Style Imports
 import '@/app/globals.css'
@@ -36,7 +36,9 @@ const RootLayout = async props => {
   // =======================================================
   // PERUBAHAN UTAMA DI SINI
   // =======================================================
-  const systemMode = 'dark' // Gunakan nilai default
+  // PERUBAHAN UTAMA DI SINI
+  // =======================================================
+  const systemMode = await getSystemMode()
   const direction = i18n.langDirection[params.lang]
 
   return (

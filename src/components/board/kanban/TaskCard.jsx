@@ -60,9 +60,10 @@ const TaskCard = ({ task, onOpenDrawer, board, mutate, column }) => {
   return (
     <>
       <Card
-        className='item-draggable w-full cursor-grab active:cursor-grabbing overflow-visible relative group'
+        className='item-draggable w-full cursor-grab active:cursor-grabbing overflow-visible relative group hover:shadow-md transition-shadow'
         onClick={() => onOpenDrawer(task)}
         draggable
+        elevation={1}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
@@ -70,18 +71,29 @@ const TaskCard = ({ task, onOpenDrawer, board, mutate, column }) => {
           <IconButton
             size='small'
             onClick={handleMenuClick}
-            className='absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity !bg-action-hover'
+            className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-backgroundPaper shadow-sm border border-divider'
           >
-            <i className='tabler-dots-vertical text-sm' />
+            <i className='tabler-dots-vertical text-sm text-textSecondary' />
           </IconButton>
 
           <Typography color='text.primary' className='break-words'>
             {task.taskTitle}
           </Typography>
 
-          <div className='flex items-center gap-2'>
-            {task?.date ? <Chip size='small' label={task.date} icon={<i className='tabler-calendar' />} /> : null}
-            {task?.status ? <Chip size='small' label={task.status} /> : null}
+          <div className='flex flex-wrap items-center gap-2 mt-1'>
+            {task?.status ? (
+              <Chip 
+                size='small' 
+                label={task.status} 
+                variant='outlined'
+                color={
+                  task.status === 'Selesai' ? 'success' : 
+                  task.status === 'Sedang Dikerjakan' ? 'warning' : 
+                  task.status === 'Buntu' ? 'error' : 'secondary'
+                } 
+              />
+            ) : null}
+            {task?.date ? <Chip size='small' label={task.date} icon={<i className='tabler-calendar text-xs px-1' />} variant='outlined' /> : null}
           </div>
 
           <div className='flex justify-end items-center w-full'>

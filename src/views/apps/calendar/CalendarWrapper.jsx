@@ -1,13 +1,16 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // MUI Imports
 import { useMediaQuery } from '@mui/material'
 
 // Third-party Imports
 import { useDispatch, useSelector } from 'react-redux'
+
+// Slice Actions
+import { fetchEvents } from '@/redux-store/slices/calendar'
 
 // Component Imports
 import Calendar from './Calendar'
@@ -35,6 +38,11 @@ const AppCalendar = () => {
   const mdAbove = useMediaQuery(theme => theme.breakpoints.up('md'))
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
+
+  // Fetch real events from database on mount
+  useEffect(() => {
+    dispatch(fetchEvents())
+  }, [dispatch])
 
   return (
     <>

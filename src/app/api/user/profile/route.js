@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import prisma from '@/libs/prisma'
 
-export async function GET(request) {
+export async function GET() {
   const session = await getServerSession(authOptions)
 
   if (!session) {
@@ -10,18 +11,22 @@ export async function GET(request) {
   }
 
   try {
-    // Return user profile data
+    const userId = BigInt(session.user.id)
+
+    const user = await prisma.user.findUnique({
+      where: { userId }
+    })
+
+    if (!user) {
+      return NextResponse.json({ message: 'User not found' }, { status: 404 })
+    }
+
     return NextResponse.json({
       user: {
-        id: session.user.id,
-        name: session.user.name,
-        email: session.user.email,
-        image: session.user.image,
-        phone: session.user.phone || '',
-        bio: session.user.bio || '',
-        company: session.user.company || '',
-        website: session.user.website || '',
-        location: session.user.location || ''
+        id: user.userId.toString(),
+        name: user.userName,
+        email: user.email,
+        image: session.user.image || null
       }
     })
   } catch (error) {
@@ -39,41 +44,30 @@ export async function PUT(request) {
 
   try {
     const body = await request.json()
-    const { name, email, phone, bio, company, website, location, image } = body
+    const { name } = body
+    const userId = BigInt(session.user.id)
 
-    // Here you would typically update the user profile in your database
-    // For now, we'll just return the updated data
-
-    const updatedProfile = {
-      id: session.user.id,
-      name: name || session.user.name,
-      email: email || session.user.email,
-      image: image || session.user.image,
-      phone: phone || '',
-      bio: bio || '',
-      company: company || '',
-      website: website || '',
-      location: location || ''
-    }
-
-    // In a real application, you would:
-    // 1. Validate the data
-    // 2. Update the database
-    // 3. Return the updated profile
+    const updatedUser = await prisma.user.update({
+      where: { userId },
+      data: {
+        userName: name || undefined,
+        txtUpdatedBy: session.user.email,
+      }
+    })
 
     return NextResponse.json({
       message: 'Profile updated successfully',
-      user: updatedProfile
+      user: {
+        id: updatedUser.userId.toString(),
+        name: updatedUser.userName,
+        email: updatedUser.email,
+      }
     })
   } catch (error) {
     console.error('Failed to update user profile:', error)
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 })
   }
 }
-
-
-
-
 
 
 

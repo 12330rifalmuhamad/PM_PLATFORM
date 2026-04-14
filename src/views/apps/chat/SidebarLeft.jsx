@@ -14,7 +14,7 @@ import classnames from 'classnames'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 
 // Slice Imports
-import { addNewChat } from '@/redux-store/slices/chat'
+import { startNewChat, fetchChatRooms } from '@/redux-store/slices/chat'
 
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
@@ -39,53 +39,52 @@ const renderChat = props => {
   // Props
   const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen } = props
 
-  return chatStore.chats.map(chat => {
-    const contact = chatStore.contacts.find(contact => contact.id === chat.userId) || chatStore.contacts[0]
-    const isChatActive = chatStore.activeUser?.id === contact.id
+  if (!chatStore.rooms || chatStore.rooms.length === 0) {
+    return (
+      <li className='text-center p-4 text-sm text-textDisabled'>
+        No conversations yet. Search for a contact to start chatting.
+      </li>
+    )
+  }
+
+  return chatStore.rooms.map(room => {
+    const isChatActive = chatStore.activeUser?.id === room.userId
 
     return (
       <li
-        key={chat.id}
+        key={room.id}
         className={classnames('flex items-start gap-4 pli-3 plb-2 cursor-pointer rounded mbe-1', {
           'bg-primary shadow-primarySm': isChatActive,
           'text-[var(--mui-palette-primary-contrastText)]': isChatActive
         })}
         onClick={() => {
-          getActiveUserData(chat.userId)
+          getActiveUserData(room.userId)
           isBelowMdScreen && setSidebarOpen(false)
           isBelowMdScreen && backdropOpen && setBackdropOpen(false)
         }}
       >
-        <AvatarWithBadge
-          src={contact.avatar}
-          isChatActive={isChatActive}
-          alt={contact.fullName}
-          badgeColor={statusObj[contact.status]}
-          color={contact.avatarColor}
-        />
+        <CustomAvatar
+          color='primary'
+          skin={isChatActive ? 'filled' : 'light'}
+          alt={room.name}
+        >
+          {getInitials(room.name || 'U')}
+        </CustomAvatar>
         <div className='min-is-0 flex-auto'>
-          <Typography color='inherit'>{contact?.fullName}</Typography>
-          {chat.chat.length ? (
-            <Typography variant='body2' color={isChatActive ? 'inherit' : 'text.secondary'} className='truncate'>
-              {chat.chat[chat.chat.length - 1].message}
-            </Typography>
-          ) : (
-            <Typography variant='body2' color={isChatActive ? 'inherit' : 'text.secondary'} className='truncate'>
-              {contact.role}
-            </Typography>
-          )}
+          <Typography color='inherit'>{room.name}</Typography>
+          <Typography variant='body2' color={isChatActive ? 'inherit' : 'text.secondary'} className='truncate'>
+            {room.lastMessage || 'No messages yet'}
+          </Typography>
         </div>
         <div className='flex flex-col items-end justify-start'>
           <Typography
             variant='body2'
             color='inherit'
-            className={classnames('truncate', {
-              'text-textDisabled': !isChatActive
-            })}
+            className={classnames('truncate', { 'text-textDisabled': !isChatActive })}
           >
-            {chat.chat.length ? formatDateToMonthShort(chat.chat[chat.chat.length - 1].time) : null}
+            {room.lastMessageTime ? formatDateToMonthShort(new Date(room.lastMessageTime)) : null}
           </Typography>
-          {chat.unseenMsgs > 0 ? <CustomChip round='true' label={chat.unseenMsgs} color='error' size='small' /> : null}
+          {room.unseenMsgs > 0 ? <CustomChip round='true' label={room.unseenMsgs} color='error' size='small' /> : null}
         </div>
       </li>
     )
@@ -121,13 +120,27 @@ const SidebarLeft = props => {
   const [userSidebar, setUserSidebar] = useState(false)
   const [searchValue, setSearchValue] = useState()
 
-  const handleChange = (event, newValue) => {
-    setSearchValue(newValue)
-    dispatch(addNewChat({ id: chatStore.contacts.find(contact => contact.fullName === newValue)?.id }))
-    getActiveUserData(chatStore.contacts.find(contact => contact.fullName === newValue)?.id || chatStore.activeUser?.id)
+  const handleChange = async (event, newValue) => {
+    if (!newValue) return
+    setSearchValue(null)
+
+    // Cari contact berdasarkan nama yang dipilih dari dropdown
+    const contact = chatStore.contacts.find(c => c.fullName === newValue)
+    if (!contact) return
+
+    // 1. Buat / buka room chat dengan user ini via API
+    await dispatch(startNewChat({ targetUserId: contact.id }))
+
+    // 2. Refresh daftar room dan tunggu hingga selesai
+    //    Setelah ini, state.rooms sudah terisi dengan roomId yang benar
+    await dispatch(fetchChatRooms())
+
+    // 3. Baru set active user — reducer getActiveUserData akan menemukan
+    //    room di state.rooms dan mengisi chat.id dengan benar
+    getActiveUserData(contact.id)
+
     isBelowMdScreen && setSidebarOpen(false)
     setBackdropOpen(false)
-    setSearchValue(null)
     messageInputRef.current?.focus()
   }
 

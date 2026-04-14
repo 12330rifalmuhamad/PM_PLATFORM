@@ -34,7 +34,7 @@ const CrmDashboardPage = async () => {
   const userName = session?.user?.name || 'Guest'
 
   return (
-    <div className='p-8 text-white'>
+    <div className='p-8'>
       {/* --- Bagian Sapaan --- */}
       <div className='mb-8'>
         <Typography variant='h4' component='h1' className='text-textPrimary font-semibold'>
@@ -49,10 +49,10 @@ const CrmDashboardPage = async () => {
         <Grid item xs={12} md={8}>
           <div className='flex flex-col gap-6'>
             {/* Kartu Recently Visited */}
-            <Paper elevation={0} className='!bg-gray-800 !p-6 !rounded-lg'>
-              <Typography variant='h6' className='!font-semibold !mb-4 flex items-center gap-2'>
+            <Paper elevation={0} className='p-6 rounded-lg border'>
+              <Typography variant='h6' className='font-semibold mb-4 flex items-center gap-2'>
                 {/* PERBAIKAN: Ikon yang lebih sesuai untuk 'recent' */}
-                <i className='tabler-clock text-blue-400' /> Recently visited
+                <i className='tabler-clock text-primary' /> Recently visited
               </Typography>
 
               <Grid container spacing={4}>
@@ -61,15 +61,15 @@ const CrmDashboardPage = async () => {
                   recentBoards.slice(0, 3).map(board => (
                     <Grid item xs={12} sm={6} md={4} key={board.boardId}>
                       <Link href={`/board/${board.boardId}`}>
-                        <Box className='border border-gray-700 rounded-lg hover:border-blue-500 transition-colors cursor-pointer'>
-                          <Box className='h-24 bg-gray-700 rounded-t-lg flex items-center justify-center'>
+                        <Box className='border rounded-lg hover:border-primary transition-colors cursor-pointer'>
+                          <Box className='h-24 bg-actionHover rounded-t-lg flex items-center justify-center'>
                             {/* Placeholder untuk thumbnail board */}
-                            <i className='tabler-layout-kanban text-4xl text-gray-500' />
+                            <i className='tabler-layout-kanban text-4xl text-textDisabled' />
                           </Box>
                           <div className='p-3 flex justify-between items-center'>
                             <Typography className='font-medium text-textPrimary'>{board.boardName}</Typography>
                             <IconButton size='small'>
-                              <i className='tabler-star text-gray-500 hover:text-yellow-400' />
+                              <i className='tabler-star text-textSecondary hover:text-warning' />
                             </IconButton>
                           </div>
                         </Box>
@@ -86,9 +86,9 @@ const CrmDashboardPage = async () => {
 
             {/* Link Update Feed */}
             <Link href='#'>
-              <Typography className='font-semibold text-textPrimary hover:text-blue-400 flex items-center gap-2'>
+              <Typography className='font-semibold text-textPrimary hover:text-primary flex items-center gap-2'>
                 <i className='tabler-arrow-right' /> Update feed (Inbox){' '}
-                <span className='bg-gray-700 text-xs px-2 py-0.5 rounded-full'>0</span>
+                <span className='bg-actionHover text-xs px-2 py-0.5 rounded-full'>0</span>
               </Typography>
             </Link>
           </div>
@@ -96,14 +96,15 @@ const CrmDashboardPage = async () => {
 
         {/* Kolom Sidebar Kanan */}
         <Grid item xs={12} md={4}>
-          <Paper elevation={0} className='!bg-gray-800 !p-6 !rounded-lg'>
-            <Typography variant='h6' className='!font-semibold !mb-4'>
+          <Paper elevation={0} className='p-6 rounded-lg border'>
+            <Typography variant='h6' className='font-semibold mb-4'>
               Learn & get inspired
             </Typography>
             <div className='flex flex-col gap-4'>
               <Button
                 variant='outlined'
-                className='!border-gray-700 !text-textPrimary !justify-start !p-3 !normal-case'
+                color='secondary'
+                className='!justify-start !p-3 !normal-case'
               >
                 <div className='bg-blue-500/20 p-2 rounded-md mr-4'>
                   <i className='tabler-rocket text-blue-400' />
@@ -117,7 +118,8 @@ const CrmDashboardPage = async () => {
               </Button>
               <Button
                 variant='outlined'
-                className='!border-gray-700 !text-textPrimary !justify-start !p-3 !normal-case'
+                color='secondary'
+                className='!justify-start !p-3 !normal-case'
               >
                 <div className='bg-purple-500/20 p-2 rounded-md mr-4'>
                   <i className='tabler-help-circle text-purple-400' />

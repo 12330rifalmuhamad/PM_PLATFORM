@@ -15,7 +15,7 @@ import FrontLayout from '@components/layout/front-pages'
 import ScrollToTop from '@core/components/scroll-to-top'
 
 // Util Imports
-// import { getSystemMode } from '@core/utils/serverHelpers'
+import { getMode, getSystemMode, getSettingsFromCookie } from '@core/utils/serverHelpers'
 
 // Style Imports
 import '@/app/globals.css'
@@ -31,13 +31,15 @@ export const metadata = {
 
 const Layout = async ({ children }) => {
   // Vars
-  const systemMode = 'light'
+  const mode = await getMode()
+  const systemMode = await getSystemMode()
+  const settingsCookie = await getSettingsFromCookie()
 
   return (
     <html id='__next' suppressHydrationWarning>
       <body className='flex is-full min-bs-full flex-auto flex-col'>
         <InitColorSchemeScript attribute='data' defaultMode={systemMode} />
-        <Providers direction='ltr' systemMode={systemMode}>
+        <Providers direction='ltr' mode={mode} systemMode={systemMode} settingsCookie={settingsCookie}>
           <BlankLayout systemMode={systemMode}>
             <IntersectionProvider>
               <FrontLayout mode={systemMode}>

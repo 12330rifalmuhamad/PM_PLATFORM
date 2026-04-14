@@ -127,7 +127,7 @@ export default function BoardContainer({ boardId }) {
       {/* --- Header Papan & Tab Navigasi View --- */}
       <Box className='px-6 pt-4 border-b border-divider'>
         {/* Baris Pertama: Nama Papan dan Aksi Global */}
-        <div className='flex justify-between items-center mb-4'>
+        <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4'>
           {/* Nama Papan dengan Dropdown */}
           <div className='flex items-center gap-2'>
             <Typography variant='h5' className='!font-semibold'>
@@ -139,7 +139,7 @@ export default function BoardContainer({ boardId }) {
           </div>
 
           {/* Aksi Kanan: Enhance, Integrate, Automate, Invite, dll. */}
-          <div className='flex items-center gap-4 text-textSecondary'>
+          <div className='flex items-center gap-2 md:gap-4 text-textSecondary overflow-x-auto w-full md:w-auto overflow-y-hidden md:overflow-visible pb-1 md:pb-0'>
             <Button
               variant='text'
               size='small'
@@ -191,8 +191,8 @@ export default function BoardContainer({ boardId }) {
         </div>
 
         {/* Baris Kedua: Tab View Navigasi */}
-        <div className='flex justify-between items-center mb-4'>
-          <nav className='flex -mb-px'>
+        <div className='flex justify-between items-center mb-4 overflow-x-auto w-full'>
+          <nav className='flex -mb-px whitespace-nowrap'>
             {' '}
             {/* -mb-px untuk menggeser sedikit ke atas */}
             {views.map(view => (
@@ -224,7 +224,7 @@ export default function BoardContainer({ boardId }) {
         </div>
 
         {/* Baris Ketiga: Aksi Cepat (New item, Add widget, Search, Person, Filter) */}
-        <div className='flex items-center gap-3 py-3'>
+        <div className='flex flex-wrap items-center gap-3 py-3 w-full'>
           <Button
             variant='contained'
             color='primary'
@@ -243,7 +243,7 @@ export default function BoardContainer({ boardId }) {
           >
             Add widget
           </Button>
-          <div className='relative md:w-64'>
+          <div className='relative w-full md:w-64 order-last md:order-none'>
              <TextField
                size='small'
                placeholder='Search'

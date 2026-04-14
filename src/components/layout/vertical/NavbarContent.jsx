@@ -1,3 +1,6 @@
+// React Imports
+import { useState, useEffect } from 'react'
+
 // Third-party Imports
 import classnames from 'classnames'
 
@@ -16,92 +19,64 @@ import { verticalLayoutClasses } from '@layouts/utils/layoutClasses'
 // Vars
 const shortcuts = [
   {
+    url: '/dashboards/crm',
+    icon: 'tabler-device-desktop-analytics',
+    title: 'Dashboard',
+    subtitle: 'Project Overview'
+  },
+  {
+    url: '/user-profile',
+    icon: 'tabler-user',
+    title: 'My Profile',
+    subtitle: 'Account Settings'
+  },
+  {
     url: '/apps/calendar',
     icon: 'tabler-calendar',
     title: 'Calendar',
     subtitle: 'Appointments'
   },
   {
-    url: '/apps/invoice/list',
-    icon: 'tabler-file-dollar',
-    title: 'Invoice App',
-    subtitle: 'Manage Accounts'
+    url: '/apps/email',
+    icon: 'tabler-mail',
+    title: 'Email',
+    subtitle: 'Messages'
   },
   {
-    url: '/apps/user/list',
-    icon: 'tabler-user',
-    title: 'Users',
-    subtitle: 'Manage Users'
+    url: '/react-table',
+    icon: 'tabler-table',
+    title: 'Tables',
+    subtitle: 'Data Overview'
   },
   {
-    url: '/apps/roles',
-    icon: 'tabler-users-group',
-    title: 'Role Management',
-    subtitle: 'Permissions'
-  },
-  {
-    url: '/',
-    icon: 'tabler-device-desktop-analytics',
-    title: 'Dashboard',
-    subtitle: 'User Dashboard'
-  },
-  {
-    url: '/pages/account-settings',
-    icon: 'tabler-settings',
-    title: 'Settings',
-    subtitle: 'Account Settings'
-  }
-]
-
-const notifications = [
-  {
-    avatarImage: '/images/avatars/8.png',
-    title: 'Congratulations Flora 🎉',
-    subtitle: 'Won the monthly bestseller gold badge',
-    time: '1h ago',
-    read: false
-  },
-  {
-    title: 'Cecilia Becker',
-    avatarColor: 'secondary',
-    subtitle: 'Accepted your connection',
-    time: '12h ago',
-    read: false
-  },
-  {
-    avatarImage: '/images/avatars/3.png',
-    title: 'Bernard Woods',
-    subtitle: 'You have new message from Bernard Woods',
-    time: 'May 18, 8:26 AM',
-    read: true
-  },
-  {
-    avatarIcon: 'tabler-chart-bar',
-    title: 'Monthly report generated',
-    subtitle: 'July month financial report is generated',
-    avatarColor: 'info',
-    time: 'Apr 24, 10:30 AM',
-    read: true
-  },
-  {
-    avatarText: 'MG',
-    title: 'Application has been approved 🚀',
-    subtitle: 'Your Meta Gadgets project application has been approved.',
-    avatarColor: 'success',
-    time: 'Feb 17, 12:17 PM',
-    read: true
-  },
-  {
-    avatarIcon: 'tabler-mail',
-    title: 'New message from Harry',
-    subtitle: 'You have new message from Harry',
-    avatarColor: 'error',
-    time: 'Jan 6, 1:48 PM',
-    read: true
+    url: '/apps/chat',
+    icon: 'tabler-message',
+    title: 'Chat',
+    subtitle: 'Team Chat'
   }
 ]
 
 const NavbarContent = () => {
+  const [notifications, setNotifications] = useState([])
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch('/api/notifications')
+      const data = await res.json()
+      setNotifications(data)
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchNotifications()
+
+    // Polling setiap 30 detik
+    const interval = setInterval(fetchNotifications, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
   return (
     <div className={classnames(verticalLayoutClasses.navbarContent, 'flex items-center justify-between gap-4 is-full')}>
       <div className='flex items-center gap-4'>
@@ -111,7 +86,7 @@ const NavbarContent = () => {
         <LanguageDropdown />
         <ModeDropdown />
         <ShortcutsDropdown shortcuts={shortcuts} />
-        <NotificationsDropdown notifications={notifications} />
+        <NotificationsDropdown notifications={notifications} onRefresh={fetchNotifications} />
         <UserDropdown />
       </div>
     </div>

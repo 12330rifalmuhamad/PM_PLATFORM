@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, use } from 'react'
 
 import { useRouter } from 'next/navigation'
 
 export default function LangPage({ params }) {
   const router = useRouter()
-  const { lang } = params
+  const { lang } = use(params)
 
   useEffect(() => {
     // Redirect to dashboard

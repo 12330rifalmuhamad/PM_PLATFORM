@@ -12,7 +12,7 @@ import classNames from 'classnames'
 import { useDispatch, useSelector } from 'react-redux'
 
 // Slice Imports
-import { getActiveUserData } from '@/redux-store/slices/chat'
+import { getActiveUserData, fetchChatRooms, fetchContacts } from '@/redux-store/slices/chat'
 
 // Component Imports
 import SidebarLeft from './SidebarLeft'
@@ -44,6 +44,23 @@ const ChatWrapper = () => {
   const activeUser = id => {
     dispatch(getActiveUserData(id))
   }
+
+  // Load real chat rooms + contacts from database on mount
+  // Order matters: rooms must load first so contacts can merge without losing room info
+  useEffect(() => {
+    const loadData = async () => {
+      await dispatch(fetchChatRooms())
+      dispatch(fetchContacts())
+    }
+    loadData()
+
+    // Polling sidebar setiap 10 detik untuk update unread count & last message
+    const sidebarPoll = setInterval(() => {
+      dispatch(fetchChatRooms())
+    }, 10000)
+
+    return () => clearInterval(sidebarPoll)
+  }, [dispatch])
 
   // Focus on message input when active user changes
   useEffect(() => {

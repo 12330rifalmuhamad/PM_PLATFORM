@@ -6,6 +6,7 @@ import ReactECharts from 'echarts-for-react'
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, IconButton, Card, CardContent, Typography, Grid, Select, InputLabel, FormControl, Alert, Tooltip, Divider, useTheme, useMediaQuery } from '@mui/material'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
+import { format, isValid, parseISO } from 'date-fns'
 
 // Use require with legacy path to find WidthProvider
 const { Responsive, WidthProvider } = require('react-grid-layout/legacy')
@@ -26,7 +27,7 @@ const getNumericValue = (item, columnId) => {
   return isNaN(floatVal) ? 0 : floatVal
 }
 
-const CHART_COLORS = ['#7367F0', '#28C76F', '#FF9F43', '#EA5455', '#00CFE8', '#826BF8', '#202124']
+// Helper to extract numeric value from various column types
 
 const CHART_TYPES = [
   { type: 'bar', label: 'Bar Chart', icon: 'tabler-chart-bar' },
@@ -193,22 +194,12 @@ const DashboardView = ({ board, searchQuery }) => {
     // but RGL handles visual state. We just need to sync data.
 
     // 3. Save to Backend
-    // In a real app, use a batch update endpoint
-    // For now, loop requests (or ideally, create a batch endpoint)
     try {
-        await Promise.all(updates.map(u => 
-            fetch(`/api/widgets/${u.widgetId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...widgets.find(w => w.widgetId === u.widgetId), // Keep other fields
-                    x: u.x,
-                    y: u.y,
-                    width: u.width,
-                    height: u.height
-                })
-            })
-        ))
+        await fetch(`/api/widgets/batch`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ updates })
+        })
         // Silent revalidate
          mutate(`/api/boards/${board.boardId}`)
     } catch (error) {
@@ -217,7 +208,6 @@ const DashboardView = ({ board, searchQuery }) => {
   }
 
   /* Live Preview & Enhanced Configuration Logic */
-  const { format, isValid, parseISO } = require('date-fns')
 
   const getChartOption = (widget, isPreview = false) => {
     const { chartType, groupByColumn, metricColumn, aggregation, title, dateGrouping, sortBy } = widget
@@ -259,7 +249,7 @@ const DashboardView = ({ board, searchQuery }) => {
              }
          }
          
-         return valObj.value
+         return (valObj.value === null || valObj.value === undefined || valObj.value === '') ? 'Unassigned' : valObj.value
     }
 
     allItems.forEach(item => {
@@ -302,11 +292,23 @@ const DashboardView = ({ board, searchQuery }) => {
     const dataValues = chartData.map(d => d.value)
 
     // 4. Construct ECharts Option
+    const activeColors = [
+      theme.palette.primary.main,
+      theme.palette.success.main,
+      theme.palette.warning.main,
+      theme.palette.error.main,
+      theme.palette.info.main,
+      theme.palette.secondary.main,
+      theme.palette.primary.dark,
+      theme.palette.success.dark,
+    ]
+    
     const option = {
+      backgroundColor: 'transparent',
       title: { text: isPreview ? undefined : title, left: 'center', textStyle: { fontSize: 16 } }, // Hide title in preview to save space or avoid redundancy
       tooltip: { trigger: 'item' },
       legend: { bottom: 0, type: 'scroll' },
-      color: CHART_COLORS,
+      color: activeColors,
       grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
     }
 
@@ -409,12 +411,13 @@ const DashboardView = ({ board, searchQuery }) => {
                     </IconButton>
                </div>
                <CardContent className='h-full flex flex-col'>
-                 <div className='flex-grow'>
+                 <div className='flex-grow bg-transparent'>
                     <ReactECharts 
                         option={getChartOption(widget)} 
                         style={{ height: '100%', width: '100%' }} 
                         // Force resize when container changes
                         autoResize={true}
+                        theme={theme.palette.mode === 'dark' ? 'dark' : 'light'}
                     />
                  </div>
                </CardContent>
@@ -633,7 +636,7 @@ const DashboardView = ({ board, searchQuery }) => {
                                 <Typography variant='h6'>Select 'Group By' to generate preview</Typography>
                             </div>
                         ) : (
-                            <div className='w-full h-full bg-white rounded-lg shadow-sm p-4 border border-divider flex flex-col'>
+                            <div className='w-full h-full bg-backgroundPaper rounded-lg shadow-sm p-4 border border-divider flex flex-col'>
                                 <Typography variant='h6' align='center' className='mb-4 font-semibold'>
                                     {currentWidgetConfig.title || 'Untitled Widget'}
                                 </Typography>
@@ -641,10 +644,11 @@ const DashboardView = ({ board, searchQuery }) => {
                                      {/* We use a key to force re-render animation on config change for better feel */}
                                      {/* or just let ReactECharts handle updates */}
                                      <ReactECharts 
-                                        key={JSON.stringify(currentWidgetConfig)}
+                                        key={JSON.stringify(currentWidgetConfig) + theme.palette.mode}
                                         option={getChartOption(currentWidgetConfig, true)} 
                                         style={{ height: '100%', width: '100%', minHeight: '400px' }} 
                                         opts={{ renderer: 'canvas' }}
+                                        theme={theme.palette.mode === 'dark' ? 'dark' : 'light'}
                                      />
                                 </div>
                             </div>

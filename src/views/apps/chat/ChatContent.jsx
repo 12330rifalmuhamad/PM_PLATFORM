@@ -1,5 +1,6 @@
 // React Imports
 import { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux'
 
 // MUI Imports
 import Button from '@mui/material/Button'
@@ -15,6 +16,9 @@ import ChatLog from './ChatLog'
 import SendMsgForm from './SendMsgForm'
 import UserProfileRight from './UserProfileRight'
 import CustomAvatar from '@core/components/mui/Avatar'
+
+// Slice Imports
+import { fetchMessages, pollNewMessages } from '@/redux-store/slices/chat'
 
 // Renders the user avatar with badge and user information
 const UserAvatar = ({ activeUser, setUserProfileLeftOpen, setBackdropOpen }) => (
@@ -57,6 +61,34 @@ const ChatContent = props => {
 
   // Vars
   const { activeUser } = chatStore
+  const roomId = activeUser?.chat?.id
+
+  // Akses messages dari Redux state untuk polling
+  const chatMessages = useSelector(state => state.chatReducer.messages)
+
+  // Fetch messages when active user / room changes (initial load)
+  useEffect(() => {
+    if (roomId) {
+      dispatch(fetchMessages(roomId))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId])
+
+  // Real-time polling: cek pesan baru setiap 3 detik
+  useEffect(() => {
+    if (!roomId) return
+
+    const intervalId = setInterval(() => {
+      // Ambil timestamp pesan terakhir
+      const messages = chatMessages?.[roomId] || []
+      const lastMsg = messages[messages.length - 1]
+      const since = lastMsg?.time ? new Date(lastMsg.time).toISOString() : null
+      dispatch(pollNewMessages({ roomId, since }))
+    }, 3000)
+
+    return () => clearInterval(intervalId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId, dispatch])
 
   useEffect(() => {
     if (!backdropOpen && userProfileRightOpen) {

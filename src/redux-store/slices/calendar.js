@@ -1,14 +1,22 @@
-// Third-party Imports
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 
-// Data Imports
-import { events } from '@/fake-db/apps/calendar'
+// Fetch events from real database
+export const fetchEvents = createAsyncThunk('calendar/fetchEvents', async () => {
+  const response = await fetch('/api/calendar/events')
+  if (!response.ok) {
+    throw new Error('Failed to fetch calendar events')
+  }
+  const data = await response.json()
+  return data
+})
 
 const initialState = {
-  events: events,
-  filteredEvents: events,
+  events: [],
+  filteredEvents: [],
   selectedEvent: null,
-  selectedCalendars: ['Personal', 'Business', 'Family', 'Holiday', 'ETC']
+  selectedCalendars: ['Personal', 'Business', 'Family', 'Holiday', 'ETC'],
+  loading: false,
+  error: null
 }
 
 const filterEventsUsingCheckbox = (events, selectedCalendars) => {
@@ -65,8 +73,28 @@ export const calendarSlice = createSlice({
     },
     filterAllCalendarLabels: (state, action) => {
       state.selectedCalendars = action.payload ? ['Personal', 'Business', 'Family', 'Holiday', 'ETC'] : []
+      // Update with filtered real events
       state.events = filterEventsUsingCheckbox(state.filteredEvents, state.selectedCalendars)
     }
+  },
+  extraReducers: builder => {
+    builder
+      .addCase(fetchEvents.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchEvents.fulfilled, (state, action) => {
+        state.loading = false
+        state.events = action.payload || []
+        state.filteredEvents = action.payload || []
+        
+        // Filter based on currently selected calendars
+        state.events = filterEventsUsingCheckbox(state.filteredEvents, state.selectedCalendars)
+      })
+      .addCase(fetchEvents.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message
+      })
   }
 })
 export const {

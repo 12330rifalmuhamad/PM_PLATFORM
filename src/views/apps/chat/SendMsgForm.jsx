@@ -17,7 +17,7 @@ import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
 
 // Slice Imports
-import { sendMsg } from '@/redux-store/slices/chat'
+import { sendMessage } from '@/redux-store/slices/chat'
 
 // Component Imports
 import CustomIconButton from '@core/components/mui/IconButton'
@@ -84,11 +84,19 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef })
     setAnchorEl(null)
   }
 
-  const handleSendMsg = (event, msg) => {
+  const handleSendMsg = async (event, msg) => {
     event.preventDefault()
 
     if (msg.trim() !== '') {
-      dispatch(sendMsg({ msg }))
+      // roomId berasal dari activeUser.chat.id yang diset oleh Redux reducer getActiveUserData
+      const roomId = activeUser?.chat?.id
+
+      if (!roomId) {
+        console.warn('[Chat] Tidak bisa kirim pesan: roomId kosong. activeUser:', activeUser)
+        return
+      }
+
+      dispatch(sendMessage({ roomId, message: msg }))
       setMsg('')
     }
   }

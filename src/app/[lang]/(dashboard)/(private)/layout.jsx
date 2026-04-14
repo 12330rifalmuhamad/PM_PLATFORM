@@ -17,9 +17,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 
 // Util Imports
 import { getDictionary } from '@/utils/getDictionary'
-
-// HAPUS IMPOR DARI SERVERHELPERS
-// import { getMode, getSystemMode } from '@core/utils/serverHelpers'
+import { getMode, getSystemMode, getSettingsFromCookie } from '@core/utils/serverHelpers'
 
 const Layout = async props => {
   const { children } = props
@@ -35,12 +33,13 @@ const Layout = async props => {
   const direction = i18n.langDirection[params.lang]
   const dictionary = await getDictionary(params.lang)
 
-  const mode = 'dark'
-  const systemMode = 'dark'
+  const mode = await getMode()
+  const systemMode = await getSystemMode()
+  const settingsCookie = await getSettingsFromCookie()
 
   return (
     <TranslationWrapper headersList={headers()} lang={params.lang}>
-      <Providers direction={direction} mode={mode} systemMode={systemMode}>
+      <Providers direction={direction} mode={mode} systemMode={systemMode} settingsCookie={settingsCookie}>
         <ProtectedLayoutContent
           direction={direction}
           dictionary={dictionary}

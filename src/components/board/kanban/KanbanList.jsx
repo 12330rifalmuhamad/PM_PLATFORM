@@ -117,32 +117,32 @@ const KanbanList = props => {
   const getColumnColor = status => {
     switch (status) {
       case 'Selesai':
-        return 'bg-green-500'
+        return 'bg-[var(--mui-palette-success-main)]'
       case 'Sedang Dikerjakan':
-        return 'bg-yellow-500'
+        return 'bg-[var(--mui-palette-warning-main)]'
       case 'Buntu':
-        return 'bg-red-500'
+        return 'bg-[var(--mui-palette-error-main)]'
       case 'Belum Mulai':
-        return 'bg-gray-500'
+        return 'bg-[var(--mui-palette-secondary-main)]'
       default:
-        return 'bg-gray-500'
+        return 'bg-[var(--mui-palette-secondary-main)]'
     }
   }
 
   return (
     <div
-      className='flex flex-col is-[16.5rem] kanban-column-draggable h-full'
+      className='flex flex-col is-[17.5rem] kanban-column-draggable h-full bg-backgroundPaper rounded-lg p-3 shadow-sm border border-divider'
       data-column-id={column.id}
       onDragOver={e => {
         e.preventDefault()
-        e.currentTarget.classList.add('bg-blue-100', 'border-2', 'border-blue-400')
+        e.currentTarget.classList.add('bg-actionHover', 'border-2', 'border-primary')
       }}
       onDragLeave={e => {
-        e.currentTarget.classList.remove('bg-blue-100', 'border-2', 'border-blue-400')
+        e.currentTarget.classList.remove('bg-actionHover', 'border-2', 'border-primary')
       }}
       onDrop={e => {
         e.preventDefault()
-        e.currentTarget.classList.remove('bg-blue-100', 'border-2', 'border-blue-400')
+        e.currentTarget.classList.remove('bg-actionHover', 'border-2', 'border-primary')
 
         const taskId = e.dataTransfer.getData('text/plain')
 
@@ -177,18 +177,18 @@ const KanbanList = props => {
         <div
           id='no-drag'
           className={classnames(
-            'flex items-center justify-between is-[16.5rem] bs-[2.125rem] mbe-4 flex-shrink-0 rounded-md text-white sticky top-0 z-10',
+            'flex items-center justify-between is-full p-3 mbe-4 flex-shrink-0 rounded-md text-white sticky top-0 z-10 shadow-sm shadow-primary/10',
             getColumnColor(column.title)
           )}
         >
-          <Typography variant='h5' noWrap className='max-is-[80%]'>
+          <Typography variant='h6' noWrap className='max-is-[80%] font-semibold text-white'>
             {column.title}{' '}
-            <span className='opacity-70'>{columns.find(c => c.id === column.id)?.taskIds?.length || 0}</span>
+            <span className='opacity-80 text-sm font-normal ml-1'>({columns.find(c => c.id === column.id)?.taskIds?.length || 0})</span>
           </Typography>
           <div className='flex items-center'>
-            <i className={classnames('tabler-arrows-move text-textSecondary list-handle', styles.drag)} />
+            <i className={classnames('tabler-arrows-move text-white/70 list-handle cursor-grab', styles.drag)} />
             <OptionMenu
-              iconClassName='text-xl text-textPrimary'
+              iconClassName='text-xl text-white'
               options={[
                 {
                   text: 'Edit',

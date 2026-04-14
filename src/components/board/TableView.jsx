@@ -177,16 +177,21 @@
   const PersonAvatar = ({ user }) => {
     if (!user) {
       return (
-        <MuiAvatar sx={{ width: 28, height: 28, bgcolor: 'action.selected', color: 'text.secondary' }} title='Unassigned'>
-          <i className='tabler-user-off' style={{ fontSize: '1rem' }} />
-        </MuiAvatar>
+        <Tooltip title='Assign Owner'>
+          <MuiAvatar sx={{ width: 28, height: 28, bgcolor: 'transparent', color: 'text.disabled', border: '1px dashed var(--mui-palette-divider)', cursor: 'pointer', '&:hover': { bgcolor: 'action.hover', color: 'primary.main', borderColor: 'primary.main' } }}>
+            <i className='tabler-user-plus' style={{ fontSize: '1.2rem' }} />
+          </MuiAvatar>
+        </Tooltip>
       )
     }
 
+    const name = user.userName || user.name || 'User'
     return (
-      <MuiAvatar sx={{ width: 28, height: 28, fontSize: '0.875rem' }} title={user.userName}>
-        {user.userName.charAt(0).toUpperCase()}
-      </MuiAvatar>
+      <Tooltip title={name}>
+        <MuiAvatar sx={{ width: 28, height: 28, fontSize: '0.875rem', bgcolor: 'primary.main', color: 'primary.contrastText', cursor: 'pointer' }}>
+          {name.charAt(0).toUpperCase()}
+        </MuiAvatar>
+      </Tooltip>
     )
   }
 
@@ -460,7 +465,7 @@
     switch (column.columnType) {
       case 'PERSON':
         return (
-          <div className='flex justify-center w-full' onClick={handleClick}>
+          <div className='flex items-center justify-center w-full h-full cursor-pointer hover:bg-actionHover transition-colors' onClick={handleClick}>
             <PersonAvatar user={cellValue ? findUserById(cellValue.value, board) : null} />
           </div>
         )
@@ -586,12 +591,13 @@
             }}
           />
           <Box
+            className="custom-scrollbar"
             sx={{
               width: '100%',
               backgroundColor: 'background.paper',
               borderLeft: 1,
               borderColor: 'divider',
-              overflow: 'hidden',
+              overflowX: 'auto',
               boxShadow: 1,
               zIndex: 10,
               borderRadius: 1
@@ -1308,18 +1314,36 @@
           )
         case 'PERSON':
           return (
-            <List>
-              {(board?.boardMember || []).map(member => (
-                <ListItemButton
-                  key={member.userId}
-                  onClick={() => {
-                    onValueSelect(member.userId.toString())
-                    onClose()
-                  }}
-                >
-                  <ListItemText primary={member.mUser.userName} />
-                </ListItemButton>
-              ))}
+            <List sx={{ minWidth: 200, p: 0 }}>
+              <ListItemButton
+                onClick={() => {
+                  onValueSelect('')
+                  onClose()
+                }}
+                sx={{ borderBottom: '1px solid', borderColor: 'divider' }}
+              >
+                <MuiAvatar sx={{ width: 24, height: 24, mr: 2, bgcolor: 'action.hover' }}>
+                  <i className='tabler-user-off text-xs text-textSecondary' />
+                </MuiAvatar>
+                <ListItemText primary="Unassigned" primaryTypographyProps={{ variant: 'body2', color: 'text.secondary' }} />
+              </ListItemButton>
+              {(board?.boardMember || []).map(member => {
+                const name = member.mUser?.userName || member.mUser?.name || 'Unknown'
+                return (
+                  <ListItemButton
+                    key={member.userId}
+                    onClick={() => {
+                      onValueSelect(member.userId.toString())
+                      onClose()
+                    }}
+                  >
+                    <MuiAvatar sx={{ width: 24, height: 24, mr: 2, fontSize: '0.75rem', bgcolor: 'primary.main', color: 'white' }}>
+                      {name.charAt(0).toUpperCase()}
+                    </MuiAvatar>
+                    <ListItemText primary={name} primaryTypographyProps={{ variant: 'body2' }} />
+                  </ListItemButton>
+                )
+              })}
             </List>
           )
         case 'DATE':
@@ -2972,8 +2996,8 @@
 
     return (
       <div className='relative'>
-        <div className='flex justify-between items-center mb-2'>
-          <div className='flex gap-2'>
+        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-2'>
+          <div className='flex flex-wrap gap-2'>
             <Button
               variant={filters.length > 0 ? 'contained' : 'outlined'}
               size='small'
@@ -2995,7 +3019,7 @@
             </div>
 
 
-          <div className='flex items-center gap-2'>
+          <div className='flex flex-wrap items-center gap-2 mt-1 sm:mt-0'>
             <Button
                 variant='text'
                 size='small'
@@ -3047,7 +3071,7 @@
             onChange={handleFileChange}
         />
 
-        <div className='overflow-auto rounded-lg border border-divider max-h-[calc(100vh-380px)] relative 
+        <div className='overflow-auto rounded-lg border border-divider min-h-[400px] md:max-h-[calc(100vh-280px)] max-h-[calc(100vh-250px)] relative 
           [&::-webkit-scrollbar]:h-3 
           [&::-webkit-scrollbar]:w-3 
           [&::-webkit-scrollbar-thumb]:bg-gray-300 

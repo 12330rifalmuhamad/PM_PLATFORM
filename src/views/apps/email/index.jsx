@@ -12,7 +12,7 @@ import classnames from 'classnames'
 import { useDispatch, useSelector } from 'react-redux'
 
 // Slice Imports
-import { filterEmails } from '@/redux-store/slices/email'
+import { filterEmails, fetchEmails } from '@/redux-store/slices/email'
 
 // Component Imports
 import SidebarLeft from './SidebarLeft'
@@ -56,7 +56,12 @@ const EmailWrapper = ({ folder, label }) => {
     }
   }, [])
 
-  // Filter all emails based on folder and label
+  // Fetch real emails from database when folder or label changes
+  useEffect(() => {
+    dispatch(fetchEmails({ folder, label }))
+  }, [dispatch, folder, label])
+
+  // Filter all emails based on folder and label (local fallback)
   useEffect(() => {
     dispatch(filterEmails({ emails: emailStore.emails, folder, label, uniqueLabels }))
     // eslint-disable-next-line react-hooks/exhaustive-deps

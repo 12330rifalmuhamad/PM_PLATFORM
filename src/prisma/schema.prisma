@@ -46,6 +46,10 @@ model User {
   notifications   trNotification[]
   activityLogs    logTaskActivity[]
   taskUpdates     trTaskUpdate[]
+  chatParticipant ChatParticipant[]
+  chatMessages    ChatMessage[]
+  sentMessages    InternalMessage[] @relation("SentMessages")
+  receivedMessages InternalMessage[] @relation("ReceivedMessages")
 
   @@map("mUser")
 }
@@ -378,4 +382,83 @@ model BoardTemplate {
   // field ini menyimpan Array kolom: [{ name: "Status", type: "STATUS", order: 1, ... }, ...]
   structure     Json
   createdAt     DateTime @default(now())
+}
+
+// =============================================================================
+// CHAT MODELS
+// =============================================================================
+
+model ChatRoom {
+  chatRoomId    BigInt   @id @default(autoincrement()) @map("intChatRoom_ID")
+  isGroup       Boolean  @default(false) @map("bitIsGroup")
+  groupName     String?  @map("txtGroupName")
+  dtmInserted   DateTime @default(now()) @map("dtmInserted")
+  txtInsertedBy String?  @map("txtInsertedBy")
+  dtmUpdated    DateTime? @updatedAt @map("dtmUpdated")
+  bitActive     Int?     @default(1) @map("bitActive")
+
+  // Relasi
+  participants  ChatParticipant[]
+  messages      ChatMessage[]
+
+  @@map("trChatRoom")
+}
+
+model ChatParticipant {
+  participantId BigInt   @id @default(autoincrement()) @map("intParticipant_ID")
+  chatRoomId    BigInt   @map("intChatRoom_ID")
+  userId        BigInt   @map("intUser_ID")
+  unseenMsgs    Int      @default(0) @map("intUnseenMsgs")
+  dtmInserted   DateTime @default(now()) @map("dtmInserted")
+  bitActive     Int?     @default(1) @map("bitActive")
+
+  // Relasi
+  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [chatRoomId], onDelete: Cascade)
+  mUser    User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([chatRoomId, userId])
+  @@map("trChatParticipant")
+}
+
+model ChatMessage {
+  messageId     BigInt   @id @default(autoincrement()) @map("intMessage_ID")
+  chatRoomId    BigInt   @map("intChatRoom_ID")
+  senderId      BigInt   @map("intSender_ID")
+  messageText   String   @map("txtMessageText") @db.Text
+  dtmInserted   DateTime @default(now()) @map("dtmInserted")
+  dtmUpdated    DateTime? @updatedAt @map("dtmUpdated")
+  bitActive     Int?     @default(1) @map("bitActive")
+
+  // Relasi
+  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [chatRoomId], onDelete: Cascade)
+  sender   User     @relation(fields: [senderId], references: [userId], onDelete: Cascade)
+
+  @@map("trChatMessage")
+}
+
+// =============================================================================
+// INTERNAL MESSAGE (EMAIL) MODEL
+// =============================================================================
+
+model InternalMessage {
+  messageId     BigInt    @id @default(autoincrement()) @map("intMessage_ID")
+  senderId      BigInt    @map("intSender_ID")
+  recipientId   BigInt    @map("intRecipient_ID")
+  subject       String    @map("txtSubject")
+  body          String    @map("txtBody") @db.Text
+  isRead        Boolean   @default(false) @map("bitIsRead")
+  isStarred     Boolean   @default(false) @map("bitIsStarred")
+  folder        String    @default("inbox") @map("txtFolder") // inbox, sent, trash, draft
+  labels        String?   @map("txtLabels") // comma separated: personal, work, important
+  dtmInserted   DateTime  @default(now()) @map("dtmInserted")
+  txtInsertedBy String?   @map("txtInsertedBy")
+  dtmUpdated    DateTime? @updatedAt @map("dtmUpdated")
+  txtUpdatedBy  String?   @map("txtUpdatedBy")
+  bitActive     Int?      @default(1) @map("bitActive")
+
+  // Relasi
+  sender    User @relation("SentMessages", fields: [senderId], references: [userId], onDelete: Cascade)
+  recipient User @relation("ReceivedMessages", fields: [recipientId], references: [userId], onDelete: Cascade)
+
+  @@map("trInternalMessage")
 }

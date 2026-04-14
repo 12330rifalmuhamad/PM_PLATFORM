@@ -3,6 +3,9 @@
 // React Imports
 import { useRef, useState, useEffect } from 'react'
 
+// Next Imports
+import { useRouter } from 'next/navigation'
+
 // MUI Imports
 import IconButton from '@mui/material/IconButton'
 import Badge from '@mui/material/Badge'
@@ -66,10 +69,15 @@ const getAvatar = params => {
   }
 }
 
-const NotificationDropdown = ({ notifications }) => {
+const NotificationDropdown = ({ notifications, onRefresh }) => {
   // States
   const [open, setOpen] = useState(false)
   const [notificationsState, setNotificationsState] = useState(notifications)
+
+  // Sync state when props change
+  useEffect(() => {
+    setNotificationsState(notifications)
+  }, [notifications])
 
   // Vars
   const notificationCount = notificationsState.filter(notification => !notification.read).length
@@ -80,6 +88,7 @@ const NotificationDropdown = ({ notifications }) => {
   const ref = useRef(null)
 
   // Hooks
+  const router = useRouter()
   const hidden = useMediaQuery(theme => theme.breakpoints.down('lg'))
   const isSmallScreen = useMediaQuery(theme => theme.breakpoints.down('sm'))
   const { settings } = useSettings()
@@ -93,12 +102,35 @@ const NotificationDropdown = ({ notifications }) => {
   }
 
   // Read notification when notification is clicked
-  const handleReadNotification = (event, value, index) => {
+  const handleReadNotification = async (event, value, index) => {
     event.stopPropagation()
-    const newNotifications = [...notificationsState]
+    const notification = notificationsState[index]
 
-    newNotifications[index].read = value
-    setNotificationsState(newNotifications)
+    if (notification.read === value) {
+      if (notification.link) {
+        router.push(notification.link)
+        setOpen(false)
+      }
+      return
+    }
+
+    // Call API to mark as read
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId: notification.roomId })
+      })
+
+      if (onRefresh) onRefresh()
+
+      if (notification.link && value === true) {
+        router.push(notification.link)
+        setOpen(false)
+      }
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error)
+    }
   }
 
   // Remove notification when close icon is clicked
@@ -111,13 +143,18 @@ const NotificationDropdown = ({ notifications }) => {
   }
 
   // Read or unread all notifications when read all icon is clicked
-  const readAllNotifications = () => {
-    const newNotifications = [...notificationsState]
+  const readAllNotifications = async () => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markAll: true })
+      })
 
-    newNotifications.forEach(notification => {
-      notification.read = !readAll
-    })
-    setNotificationsState(newNotifications)
+      if (onRefresh) onRefresh()
+    } catch (error) {
+      console.error('Failed to mark all as read:', error)
+    }
   }
 
   useEffect(() => {
