@@ -1,5 +1,5 @@
 // Component Imports
-import VerifyEmailV1 from '@/views/pagesll/auth/VerifyEmailV1'
+import VerifyEmailV1 from '@/views/pages/auth/VerifyEmailV1'
 
 const VerifyEmailV1Page = () => {
   return (

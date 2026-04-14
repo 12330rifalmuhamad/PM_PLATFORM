@@ -1,5 +1,5 @@
 // Component Imports
-import RegisterMultiSteps from '@/views/pagesll/auth/register-multi-steps'
+import RegisterMultiSteps from '@/views/pages/auth/register-multi-steps'
 
 // Server Action Imports
 import { getServerMode } from '@core/utils/serverHelpers'

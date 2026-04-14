@@ -1,5 +1,5 @@
 // Component Imports
-import LoginV1 from '@/views/pagesll/auth/LoginV1'
+import LoginV1 from '@/views/pages/auth/LoginV1'
 
 const LoginV1Page = () => {
   return (

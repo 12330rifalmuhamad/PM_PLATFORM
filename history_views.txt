@@ -1,0 +1,147 @@
+total 248
+drwxr-xr-x  17 muhammadrifalrifdiansyah  staff   544 Nov 13 08:57 .
+drwxr-xr-x  15 muhammadrifalrifdiansyah  staff   480 Nov 11 12:39 ..
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  9406 Nov 11 13:24 Login_20251111132455.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  9400 Nov 11 13:27 Login_20251111132736.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  9400 Nov 11 13:27 Login_20251111132743.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  9418 Nov 11 13:31 Login_20251111133145.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  9371 Nov 11 13:32 Login_20251111133216.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  9371 Nov 11 13:32 Login_20251111133244.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  9272 Nov 11 13:33 Login_20251111133313.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  9272 Nov 11 13:34 Login_20251111133424.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  9272 Nov 11 13:35 Login_20251111133554.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  8161 Nov 11 13:36 Login_20251111133650.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  8162 Nov 12 10:32 Login_20251112103248.jsx
+drwxr-xr-x   4 muhammadrifalrifdiansyah  staff   128 Sep  2  2025 apps
+drwxr-xr-x   4 muhammadrifalrifdiansyah  staff   128 Sep 17  2025 front-pages
+drwxr-xr-x   5 muhammadrifalrifdiansyah  staff   160 Nov 13 08:57 pages
+drwxr-xr-x  39 muhammadrifalrifdiansyah  staff  1248 Oct 28 18:27 project-management
+
+.history/src/views/apps:
+total 0
+drwxr-xr-x   4 muhammadrifalrifdiansyah  staff  128 Sep  2  2025 .
+drwxr-xr-x  17 muhammadrifalrifdiansyah  staff  544 Nov 13 08:57 ..
+drwxr-xr-x   3 muhammadrifalrifdiansyah  staff   96 Sep  2  2025 academy
+drwxr-xr-x  23 muhammadrifalrifdiansyah  staff  736 Sep 24  2025 kanban
+
+.history/src/views/apps/academy:
+total 0
+drwxr-xr-x  3 muhammadrifalrifdiansyah  staff   96 Sep  2  2025 .
+drwxr-xr-x  4 muhammadrifalrifdiansyah  staff  128 Sep  2  2025 ..
+drwxr-xr-x  3 muhammadrifalrifdiansyah  staff   96 Sep  2  2025 course-details
+
+.history/src/views/apps/academy/course-details:
+total 16
+drwxr-xr-x  3 muhammadrifalrifdiansyah  staff    96 Sep  2  2025 .
+drwxr-xr-x  3 muhammadrifalrifdiansyah  staff    96 Sep  2  2025 ..
+-rw-r--r--  1 muhammadrifalrifdiansyah  staff  4555 Sep  2  2025 Sidebar_20250902223430.jsx
+
+.history/src/views/apps/kanban:
+total 296
+drwxr-xr-x  23 muhammadrifalrifdiansyah  staff   736 Sep 24  2025 .
+drwxr-xr-x   4 muhammadrifalrifdiansyah  staff   128 Sep  2  2025 ..
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  2551 Sep 23  2025 KanbanBoard_20250923180033.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  2552 Sep 23  2025 KanbanBoard_20250923180110.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  2554 Sep 23  2025 KanbanBoard_20250923180147.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  2610 Sep 23  2025 KanbanBoard_20250923180222.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  8080 Sep  2  2025 KanbanDrawer_20241220160537.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  8080 Sep  2  2025 KanbanDrawer_20250902155658.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  8080 Sep 24  2025 KanbanDrawer_20250924085509.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  8086 Sep 24  2025 KanbanDrawer_20250924085517.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  8086 Sep 24  2025 KanbanDrawer_20250924085530.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  5638 Sep 24  2025 KanbanDrawer_20250924090617.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  5638 Sep 24  2025 KanbanDrawer_20250924090628.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  8080 Sep 24  2025 KanbanDrawer_20250924090934.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  8080 Sep 24  2025 KanbanDrawer_20250924091120.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  8080 Sep 24  2025 KanbanDrawer_20250924091138.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  6281 Sep 24  2025 TaskCard_20241220160537.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  1942 Sep 24  2025 TaskCard_20250924090845.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  6281 Sep 24  2025 TaskCard_20250924090920.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  6281 Sep 24  2025 TaskCard_20250924090954.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  6281 Sep 24  2025 TaskCard_20250924091011.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  6281 Sep 24  2025 TaskCard_20250924091012.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  6282 Sep 24  2025 TaskCard_20250924100533.jsx
+
+.history/src/views/front-pages:
+total 16
+drwxr-xr-x   4 muhammadrifalrifdiansyah  staff  128 Sep 17  2025 .
+drwxr-xr-x  17 muhammadrifalrifdiansyah  staff  544 Nov 13 08:57 ..
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  785 Sep 17  2025 CheckoutPage_20241220160537.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  788 Sep 17  2025 CheckoutPage_20250917151930.jsx
+
+.history/src/views/pages:
+total 0
+drwxr-xr-x   5 muhammadrifalrifdiansyah  staff  160 Nov 13 08:57 .
+drwxr-xr-x  17 muhammadrifalrifdiansyah  staff  544 Nov 13 08:57 ..
+drwxr-xr-x   3 muhammadrifalrifdiansyah  staff   96 Sep 17  2025 account-settings
+drwxr-xr-x   4 muhammadrifalrifdiansyah  staff  128 Sep 17  2025 auth
+drwxr-xr-x   4 muhammadrifalrifdiansyah  staff  128 Sep 17  2025 faq
+
+.history/src/views/pages/account-settings:
+total 0
+drwxr-xr-x  3 muhammadrifalrifdiansyah  staff   96 Sep 17  2025 .
+drwxr-xr-x  5 muhammadrifalrifdiansyah  staff  160 Nov 13 08:57 ..
+drwxr-xr-x  4 muhammadrifalrifdiansyah  staff  128 Sep 17  2025 account
+
+.history/src/views/pages/account-settings/account:
+total 48
+drwxr-xr-x  4 muhammadrifalrifdiansyah  staff    128 Sep 17  2025 .
+drwxr-xr-x  3 muhammadrifalrifdiansyah  staff     96 Sep 17  2025 ..
+-rw-r--r--  1 muhammadrifalrifdiansyah  staff  10521 Sep 17  2025 AccountDetails_20241220160537.jsx
+-rw-r--r--  1 muhammadrifalrifdiansyah  staff  10521 Sep 17  2025 AccountDetails_20250917105257.jsx
+
+.history/src/views/pages/auth:
+total 16
+drwxr-xr-x  4 muhammadrifalrifdiansyah  staff   128 Sep 17  2025 .
+drwxr-xr-x  5 muhammadrifalrifdiansyah  staff   160 Nov 13 08:57 ..
+-rw-r--r--  1 muhammadrifalrifdiansyah  staff  1552 Sep 17  2025 AuthIllustrationWrapper_20241220160537.jsx
+-rw-r--r--  1 muhammadrifalrifdiansyah  staff  1552 Sep 17  2025 AuthIllustrationWrapper_20250917133249.jsx
+
+.history/src/views/pages/faq:
+total 16
+drwxr-xr-x  4 muhammadrifalrifdiansyah  staff  128 Sep 17  2025 .
+drwxr-xr-x  5 muhammadrifalrifdiansyah  staff  160 Nov 13 08:57 ..
+-rw-r--r--  1 muhammadrifalrifdiansyah  staff  756 Sep 17  2025 index_20241220160537.jsx
+-rw-r--r--  1 muhammadrifalrifdiansyah  staff  765 Sep 17  2025 index_20250917151930.jsx
+
+.history/src/views/project-management:
+total 744
+drwxr-xr-x  39 muhammadrifalrifdiansyah  staff   1248 Oct 28 18:27 .
+drwxr-xr-x  17 muhammadrifalrifdiansyah  staff    544 Nov 13 08:57 ..
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   2159 Sep 18  2025 BoardView_20250918100258.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   2063 Sep 18  2025 BoardView_20250918100500.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   2063 Sep 18  2025 BoardView_20250918110203.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   2063 Sep 18  2025 BoardView_20250918110218.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   2063 Sep 18  2025 BoardView_20250918110844.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   2063 Sep 18  2025 BoardView_20250918110849.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   2063 Sep 18  2025 BoardView_20250918110932.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   2063 Sep 18  2025 BoardView_20250918111333.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   2063 Sep 18  2025 BoardView_20250918111412.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   2063 Sep 18  2025 BoardView_20250918112244.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   8268 Sep 18  2025 ProjectDashboard_20250918100118.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   7972 Sep 18  2025 ProjectDashboard_20250918100500.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   7992 Sep 18  2025 ProjectDashboard_20250918102302.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   7994 Sep 18  2025 ProjectDashboard_20250918102356.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   7994 Sep 18  2025 ProjectDashboard_20250918110203.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   7994 Sep 18  2025 ProjectDashboard_20250918110218.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   7994 Sep 18  2025 ProjectDashboard_20250918110844.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   7994 Sep 18  2025 ProjectDashboard_20250918110849.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   7994 Sep 18  2025 ProjectDashboard_20250918110932.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   7994 Sep 18  2025 ProjectDashboard_20250918111333.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   7994 Sep 18  2025 ProjectDashboard_20250918111412.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff   7994 Sep 18  2025 ProjectDashboard_20250918112244.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  10603 Oct 28 14:46 WorkspaceView_20251028144605.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  10698 Oct 28 14:46 WorkspaceView_20251028144616.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  14105 Oct 28 14:53 WorkspaceView_20251028145304.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  14105 Oct 28 14:53 WorkspaceView_20251028145331.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  14108 Oct 28 14:53 WorkspaceView_20251028145359.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  14155 Oct 28 14:55 WorkspaceView_20251028145529.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  14155 Oct 28 14:55 WorkspaceView_20251028145558.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  14155 Oct 28 14:56 WorkspaceView_20251028145613.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  14155 Oct 28 14:56 WorkspaceView_20251028145626.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  14155 Oct 28 14:56 WorkspaceView_20251028145640.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  14157 Oct 28 14:57 WorkspaceView_20251028145726.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  14157 Oct 28 14:57 WorkspaceView_20251028145735.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  14121 Oct 28 14:58 WorkspaceView_20251028145804.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  14121 Oct 28 16:01 WorkspaceView_20251028160159.jsx
+-rw-r--r--   1 muhammadrifalrifdiansyah  staff  14121 Oct 28 18:27 WorkspaceView_20251028182754.jsx

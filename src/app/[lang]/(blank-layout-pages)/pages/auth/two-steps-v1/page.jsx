@@ -1,5 +1,5 @@
 // Component Imports
-import TwoStepsV1 from '@/views/pagesll/auth/TwoStepsV1'
+import TwoStepsV1 from '@/views/pages/auth/TwoStepsV1'
 
 const TwoStepsV1Page = () => {
   return (

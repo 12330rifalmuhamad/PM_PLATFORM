@@ -1,5 +1,5 @@
 // Component Imports
-import ComingSoon from '@/views/pagesll/misc/ComingSoon'
+import ComingSoon from '@/views/pages/misc/ComingSoon'
 
 // Server Action Imports
 import { getServerMode } from '@core/utils/serverHelpers'

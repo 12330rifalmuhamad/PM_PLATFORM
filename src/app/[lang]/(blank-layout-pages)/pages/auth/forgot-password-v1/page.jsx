@@ -1,5 +1,5 @@
 // Component Imports
-import ForgotPasswordV1 from '@/views/pagesll/auth/ForgotPasswordV1'
+import ForgotPasswordV1 from '@/views/pages/auth/ForgotPasswordV1'
 
 const ForgotPasswordV1Page = () => {
   return (

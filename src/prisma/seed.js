@@ -79,6 +79,8 @@ async function main() {
     }
   })
 
+  // git
+
   // 4. Ambil ID dari kolom yang baru saja dibuat
   const pemilikColumnId = board1.columns.find(c => c.columnName === 'Pemilik').columnId
   const statusColumnId = board1.columns.find(c => c.columnName === 'Status').columnId

@@ -1,5 +1,5 @@
 // Component Imports
-import UnderMaintenance from '@/views/pagesll/misc/UnderMaintenance'
+import UnderMaintenance from '@/views/pages/misc/UnderMaintenance'
 
 // Server Action Imports
 import { getServerMode } from '@core/utils/serverHelpers'
