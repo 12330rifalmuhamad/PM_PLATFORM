@@ -7,7 +7,7 @@ import { useEffect } from 'react'
 import classnames from 'classnames'
 
 // Component Imports
-import Checkout from '@/views/pagesll/wizard-examples/checkout/index'
+import Checkout from '@/views/pages/wizard-examples/checkout/index'
 import { useSettings } from '@core/hooks/useSettings'
 
 // Styles Imports

@@ -1,5 +1,5 @@
 // Component Imports
-import LoginV2 from '@/views/pagesll/auth/LoginV2'
+import LoginV2 from '@/views/pages/auth/LoginV2'
 
 // Server Action Imports
 import { getServerMode } from '@core/utils/serverHelpers'
