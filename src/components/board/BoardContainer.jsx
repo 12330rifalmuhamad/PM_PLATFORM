@@ -125,16 +125,16 @@ export default function BoardContainer({ boardId }) {
   return (
     <div className={`flex-1 ${darkModeClasses}`}>
       {/* --- Header Papan & Tab Navigasi View --- */}
-      <Box className='px-6 pt-4 border-b border-divider'>
+      <Box className='px-4 md:px-6 pt-3 md:pt-4 border-b border-divider'>
         {/* Baris Pertama: Nama Papan dan Aksi Global */}
-        <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4'>
+        <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-3 md:mb-4 gap-2 md:gap-4'>
           {/* Nama Papan dengan Dropdown */}
-          <div className='flex items-center gap-2'>
-            <Typography variant='h5' className='!font-semibold'>
+          <div className='flex items-center gap-1 md:gap-2'>
+            <Typography variant='h6' className='!font-semibold md:!variant-h5'>
               {board.boardName}
             </Typography>
             <IconButton size='small' color='secondary' className='-ml-1'>
-              <i className='tabler-chevron-down' />
+              <i className='tabler-chevron-down text-base md:text-xl' />
             </IconButton>
           </div>
 
@@ -198,7 +198,7 @@ export default function BoardContainer({ boardId }) {
             {views.map(view => (
               <Button
                 key={view.key}
-                className={`!normal-case !rounded-none !py-2 !px-4 !min-w-0 ${
+                className={`!normal-case !rounded-none !py-1 md:!py-2 !px-2 md:!px-4 !min-w-0 ${
                   activeView === view.key
                     ? '!text-primary-main !border-b-2 !border-primary-main'
                     : '!text-textSecondary hover:!text-primary-main !border-b-2 !border-transparent'
@@ -206,6 +206,7 @@ export default function BoardContainer({ boardId }) {
                 onClick={() => setActiveView(view.key)}
                 variant='text' // Gunakan variant text untuk tab
                 disableRipple // Hapus efek ripple
+                size='small'
               >
                 {view.label}
               </Button>
@@ -224,11 +225,12 @@ export default function BoardContainer({ boardId }) {
         </div>
 
         {/* Baris Ketiga: Aksi Cepat (New item, Add widget, Search, Person, Filter) */}
-        <div className='flex flex-wrap items-center gap-3 py-3 w-full'>
+        <div className='flex flex-wrap items-center gap-2 md:gap-3 py-2 md:py-3 w-full'>
           <Button
             variant='contained'
             color='primary'
-            startIcon={<i className='tabler-plus' />}
+            size='small'
+            startIcon={<i className='tabler-plus text-base' />}
             onClick={handleCreateTopNewItem}
             className='!normal-case'
           >
@@ -237,13 +239,14 @@ export default function BoardContainer({ boardId }) {
           <Button
             variant='outlined'
             color='secondary'
-            startIcon={<i className='tabler-layout-grid-add' />}
+            size='small'
+            startIcon={<i className='tabler-layout-grid-add text-base' />}
             onClick={() => openModal('ADD_WIDGET')} // Misalnya, modal untuk widget
             className='!normal-case'
           >
             Add widget
           </Button>
-          <div className='relative w-full md:w-64 order-last md:order-none'>
+          <div className='relative w-full md:w-56 order-last md:order-none'>
              <TextField
                size='small'
                placeholder='Search'
@@ -251,19 +254,19 @@ export default function BoardContainer({ boardId }) {
                value={searchQuery}
                onChange={e => setSearchQuery(e.target.value)}
                InputProps={{
+                 className: 'h-8 md:h-10',
                  startAdornment: (
                     <InputAdornment position='start'>
-                      <i className='tabler-search' />
+                      <i className='tabler-search text-base' />
                     </InputAdornment>
                  )
                }}
              />
           </div>
 
-          {/* Tombol panah ke atas */}
           <div className='flex-grow flex justify-end'>
             <IconButton size='small' color='secondary'>
-              <i className='tabler-chevron-up' />
+              <i className='tabler-chevron-up text-base' />
             </IconButton>
           </div>
         </div>

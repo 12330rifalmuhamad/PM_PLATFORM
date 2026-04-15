@@ -178,8 +178,8 @@
     if (!user) {
       return (
         <Tooltip title='Assign Owner'>
-          <MuiAvatar sx={{ width: 28, height: 28, bgcolor: 'transparent', color: 'text.disabled', border: '1px dashed var(--mui-palette-divider)', cursor: 'pointer', '&:hover': { bgcolor: 'action.hover', color: 'primary.main', borderColor: 'primary.main' } }}>
-            <i className='tabler-user-plus' style={{ fontSize: '1.2rem' }} />
+          <MuiAvatar sx={{ width: { xs: 24, md: 28 }, height: { xs: 24, md: 28 }, bgcolor: 'transparent', color: 'text.disabled', border: '1px dashed var(--mui-palette-divider)', cursor: 'pointer', '&:hover': { bgcolor: 'action.hover', color: 'primary.main', borderColor: 'primary.main' } }}>
+            <i className='tabler-user-plus text-sm md:text-xl' />
           </MuiAvatar>
         </Tooltip>
       )
@@ -188,7 +188,7 @@
     const name = user.userName || user.name || 'User'
     return (
       <Tooltip title={name}>
-        <MuiAvatar sx={{ width: 28, height: 28, fontSize: '0.875rem', bgcolor: 'primary.main', color: 'primary.contrastText', cursor: 'pointer' }}>
+        <MuiAvatar sx={{ width: { xs: 24, md: 28 }, height: { xs: 24, md: 28 }, fontSize: { xs: '0.75rem', md: '0.875rem' }, bgcolor: 'primary.main', color: 'primary.contrastText', cursor: 'pointer' }}>
           {name.charAt(0).toUpperCase()}
         </MuiAvatar>
       </Tooltip>
@@ -208,12 +208,12 @@
       : `${formatTimelineDate(start)} - ${formatTimelineDate(end)}`
 
     return (
-      <div className='w-full px-2 py-1 h-full flex items-center'>
+      <div className='w-full px-1 md:px-2 py-0.5 md:py-1 h-full flex items-center'>
         <div
-          className={`flex items-center justify-center text-[11px] text-white font-medium rounded-full bg-[#00c875] hover:bg-[#00b569] h-6 w-full truncate px-2 cursor-pointer transition-colors relative`}
+          className={`flex items-center justify-center text-[10px] md:text-[11px] text-white font-medium rounded-full bg-[#00c875] hover:bg-[#00b569] h-5 md:h-6 w-full truncate px-1 md:px-2 cursor-pointer transition-colors relative`}
           title={displayRange}
         >
-          {isMilestone && <i className='tabler-diamond-filled mr-1 text-[10px]' />}
+          {isMilestone && <i className='tabler-diamond-filled mr-1 text-[9px] md:text-[10px]' />}
           {displayRange}
         </div>
       </div>
@@ -265,7 +265,7 @@
     const colors = option ? `${option.color} ${option.text}` : 'bg-actionHover text-textPrimary'
 
     return (
-      <div className={`flex items-center justify-center w-full h-full text-xs font-bold ${colors}`}>{displayText}</div>
+      <div className={`flex items-center justify-center w-full h-full text-[11px] md:text-xs font-bold ${colors}`}>{displayText}</div>
     )
   }
 
@@ -611,9 +611,9 @@
                       component='th'
                       key={col.columnId}
                       sx={{
-                        px: 1,
-                        py: 1,
-                        fontSize: '0.65rem',
+                        px: { xs: 0.5, md: 1 },
+                        py: { xs: 0.5, md: 1 },
+                        fontSize: { xs: '0.6rem', md: '0.65rem' },
                         fontWeight: 'bold',
                         color: 'text.secondary',
                         textTransform: 'uppercase',
@@ -663,7 +663,7 @@
                           p: 0,
                           borderRight: 1,
                           borderColor: 'divider',
-                          height: 32,
+                          height: { xs: 28, md: 32 },
                           width: columnWidths[col.columnId] || col.width || 200,
                           minWidth: columnWidths[col.columnId] || col.width || 200,
                           maxWidth: columnWidths[col.columnId] || col.width || 200,
@@ -3362,7 +3362,7 @@
                             return (
                               <td
                                 key={`${item.taskId}-${column.columnId}`}
-                                className={`p-0 h-10 border-r border-divider ${stickyClass}`}
+                                className={`p-0 h-8 md:h-10 border-r border-divider ${stickyClass}`}
                                 style={{ 
                                     width: currentWidth, 
                                     minWidth: currentWidth, 
@@ -3385,7 +3385,7 @@
                                       handleCellClick(e, item, column)
                                     }
                                   }}
-                                  className={`flex items-center w-full h-full cursor-pointer ${column.columnType !== 'STATUS' && column.columnType !== 'TEXT' && !isItemColumn ? 'justify-center' : 'justify-start'} ${column.columnType !== 'STATUS' && !isItemColumn ? 'px-3' : ''}`}
+                                  className={`flex items-center w-full h-full cursor-pointer ${column.columnType !== 'STATUS' && column.columnType !== 'TEXT' && !isItemColumn ? 'justify-center' : 'justify-start'} ${column.columnType !== 'STATUS' && !isItemColumn ? 'px-1.5 md:px-3' : ''}`}
                                 >
                                   {isEditingItemTitle ? (
                                     <div className="flex items-center w-full pl-8"> 
