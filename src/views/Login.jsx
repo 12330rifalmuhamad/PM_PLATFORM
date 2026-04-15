@@ -34,11 +34,11 @@ import { getLocalizedUrl } from '@/utils/i18n'
 // ==========================================================
 // KONFIGURASI TAMPILAN - GANTI PATH DI SINI
 // ==========================================================
-const logoPath = '/images/logo-KMI.png' // Path logo kustom Anda
+const logoPath = '/images/wanatask_icon.png' // Path logo kustom Anda
 const logoWidth = 180 // Lebar logo Anda
 
 // Path ilustrasi 3D kustom Anda
-const illustrationPath = '/images/login-3D.png' // Pastikan .png atau  ekstensi yang benar
+const illustrationPath = '/images/3d_icon.png' // Pastikan .png atau  ekstensi yang benar
 // ==========================================================
 
 // Styled Custom Components
@@ -125,7 +125,7 @@ const Login = ({ mode }) => {
         </div>
         <div className='flex flex-col gap-6 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-8 sm:mbs-11 md:mbs-0'>
           <div className='flex flex-col gap-1'>
-            <Typography variant='h4'>Welcome to KMI PM Platform! 👋🏻</Typography>
+            <Typography variant='h4'>Welcome to WanaTask! 👋🏻</Typography>
             <Typography>Please sign-in to your account and start the adventure</Typography>
           </div>
 
