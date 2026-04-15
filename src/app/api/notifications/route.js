@@ -19,69 +19,75 @@ export async function GET() {
     const notifications = []
 
     // ─── 1. Chat Notifications ─────────────────────────────────────────────
-    const chatParticipants = await prisma.chatParticipant.findMany({
-      where: {
-        userId,
-        bitActive: 1,
-        unseenMsgs: { gt: 0 }
-      },
-      include: {
-        chatRoom: {
-          include: {
-            messages: {
-              orderBy: { dtmInserted: 'desc' },
-              take: 1,
-              include: {
-                sender: { select: { userId: true, userName: true } }
+    try {
+      const chatParticipants = await prisma.chatParticipant.findMany({
+        where: {
+          userId,
+          bitActive: 1,
+          unseenMsgs: { gt: 0 }
+        },
+        include: {
+          chatRoom: {
+            include: {
+              messages: {
+                orderBy: { dtmInserted: 'desc' },
+                take: 1,
+                include: {
+                  sender: { select: { userId: true, userName: true } }
+                }
+              },
+              participants: {
+                where: {
+                  userId: { not: userId },
+                  bitActive: 1
+                },
+                include: {
+                  mUser: { select: { userId: true, userName: true } }
+                },
+                take: 1
               }
-            },
-            participants: {
-              where: {
-                userId: { not: userId },
-                bitActive: 1
-              },
-              include: {
-                mUser: { select: { userId: true, userName: true } }
-              },
-              take: 1
             }
           }
         }
-      }
-    })
-
-    chatParticipants.forEach(participant => {
-      const room = participant.chatRoom
-      const lastMsg = room.messages[0]
-      const otherUser = room.participants[0]?.mUser
-
-      if (!lastMsg) return
-
-      const senderName = lastMsg.sender.userName
-      const isGroup = room.isGroup
-      const roomName = isGroup ? room.groupName : (otherUser?.userName || senderName)
-
-      notifications.push({
-        id: `chat-${room.chatRoomId.toString()}`,
-        type: 'chat',
-        avatarIcon: 'tabler-message',
-        avatarColor: 'primary',
-        title: `New message from ${senderName}`,
-        subtitle: isGroup
-          ? `[${roomName}] ${decrypt(lastMsg.messageText).substring(0, 60)}${lastMsg.messageText.length > 60 ? '...' : ''}`
-          : decrypt(lastMsg.messageText).substring(0, 80),
-        time: formatTimeAgo(lastMsg.dtmInserted),
-        read: false,
-        count: participant.unseenMsgs,
-        link: '/apps/chat',
-        roomId: room.chatRoomId.toString()
       })
-    })
+
+      chatParticipants.forEach(participant => {
+        const room = participant.chatRoom
+        const lastMsg = room.messages[0]
+        const otherUser = room.participants[0]?.mUser
+
+        if (!lastMsg) return
+
+        const senderName = lastMsg.sender?.userName || 'Unknown'
+        const isGroup = room.isGroup
+        const roomName = isGroup ? room.groupName : (otherUser?.userName || senderName)
+        const decryptedText = decrypt(lastMsg.messageText) || ''
+
+        notifications.push({
+          id: `chat-${room.chatRoomId.toString()}`,
+          type: 'chat',
+          avatarIcon: 'tabler-message',
+          avatarColor: 'primary',
+          title: `New message from ${senderName}`,
+          subtitle: isGroup
+            ? `[${roomName}] ${decryptedText.substring(0, 60)}${decryptedText.length > 60 ? '...' : ''}`
+            : decryptedText.substring(0, 80),
+          time: formatTimeAgo(lastMsg.dtmInserted),
+          read: false,
+          count: participant.unseenMsgs,
+          link: '/apps/chat',
+          roomId: room.chatRoomId.toString()
+        })
+      })
+    } catch (chatError) {
+      console.error('Failed to fetch chat notifications:', chatError)
+      // Continue without chat notifications
+    }
 
     // ─── 2. DB Notifications (trNotification jika ada) ────────────────────
     try {
       const dbNotifs = await prisma.trNotification.findMany({
-        where: { userId, isRead: false, bitActive: 1 },
+        where: { userId, isRead: 0, bitActive: 1 },
         orderBy: { dtmInserted: 'desc' },
         take: 10
       })
@@ -89,13 +95,13 @@ export async function GET() {
       dbNotifs.forEach(n => {
         notifications.push({
           id: `db-${n.notificationId?.toString() || Math.random()}`,
-          type: n.type || 'system',
+          type: 'system',
           avatarIcon: 'tabler-bell',
           avatarColor: 'info',
-          title: n.title || 'System Notification',
+          title: 'Notification',
           subtitle: n.message || '',
           time: formatTimeAgo(n.dtmInserted),
-          read: n.isRead || false,
+          read: n.isRead === 1,
           count: null,
           link: n.link || null
         })
