@@ -3,8 +3,8 @@ import '@/app/globals.css'
 import '@assets/iconify-icons/generated-icons.css'
 
 export const metadata = {
-  title: 'KMI PM Platform',
-  description: 'KMI PM Platform'
+  title: 'WANATASK',
+  description: 'WANATASK'
 }
 
 const RootLayout = async ({ children }) => {
