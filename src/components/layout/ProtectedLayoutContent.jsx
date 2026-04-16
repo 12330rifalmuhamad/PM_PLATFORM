@@ -15,6 +15,7 @@ import AuthGuard from '@/hocs/AuthGuard'
 // PASTIKAN MODAL PROVIDER DIIMPOR DI SINI
 import ModalProvider from '@/components/ModalProvider'
 import RotateOverlay from '@/components/layout/shared/RotateOverlay'
+import FloatingChatWidget from '@/views/apps/chat/FloatingChatWidget'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
@@ -55,6 +56,7 @@ const ProtectedLayoutContent = props => {
           </Button>
         </ScrollToTop>
         <Customizer dir={direction} />
+        <FloatingChatWidget />
       </AuthGuard>
     </>
   )

@@ -113,7 +113,8 @@ const SidebarLeft = props => {
     isBelowLgScreen,
     isBelowMdScreen,
     isBelowSmScreen,
-    messageInputRef
+    messageInputRef,
+    disableDrawer = false
   } = props
 
   // States
@@ -144,121 +145,131 @@ const SidebarLeft = props => {
     messageInputRef.current?.focus()
   }
 
-  return (
-    <>
-      <Drawer
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        className='bs-full'
-        variant={!isBelowMdScreen ? 'permanent' : 'persistent'}
-        ModalProps={{
-          disablePortal: true,
-          keepMounted: true // Better open performance on mobile.
-        }}
-        sx={{
-          zIndex: isBelowMdScreen && sidebarOpen ? 11 : 10,
-          position: !isBelowMdScreen ? 'static' : 'absolute',
-          ...(isBelowSmScreen && sidebarOpen && { width: '100%' }),
-          '& .MuiDrawer-paper': {
-            overflow: 'hidden',
-            boxShadow: 'none',
-            width: isBelowSmScreen ? '100%' : '370px',
-            position: !isBelowMdScreen ? 'static' : 'absolute'
-          }
-        }}
-      >
-        <div className='flex items-center plb-[18px] pli-6 gap-4 border-be'>
-          <AvatarWithBadge
-            alt={chatStore.profileUser.fullName}
-            src={chatStore.profileUser.avatar}
-            badgeColor={statusObj[chatStore.profileUser.status]}
-            onClick={() => {
-              setUserSidebar(true)
+  const SidebarContent = (
+    <div className='flex flex-col bs-full overflow-hidden'>
+      <div className='flex items-center plb-[18px] pli-6 gap-4 border-be'>
+        <AvatarWithBadge
+          alt={chatStore.profileUser.fullName}
+          src={chatStore.profileUser.avatar}
+          badgeColor={statusObj[chatStore.profileUser.status]}
+          onClick={() => {
+            setUserSidebar(true)
+          }}
+        />
+        <div className='flex is-full items-center flex-auto sm:gap-x-3'>
+          <Autocomplete
+            fullWidth
+            size='small'
+            id='select-contact'
+            options={chatStore.contacts.map(contact => contact.fullName) || []}
+            value={searchValue || null}
+            onChange={handleChange}
+            renderInput={params => (
+              <CustomTextField
+                {...params}
+                variant='outlined'
+                placeholder='Search Contacts'
+                slotProps={{
+                  input: {
+                    ...params.InputProps,
+                    startAdornment: (
+                      <InputAdornment position='start'>
+                        <i className='tabler-search' />
+                      </InputAdornment>
+                    )
+                  }
+                }}
+              />
+            )}
+            renderOption={(props, option) => {
+              const contact = chatStore.contacts.find(contact => contact.fullName === option)
+
+              return (
+                <li
+                  {...props}
+                  key={option.toLowerCase().replace(/\s+/g, '-')}
+                  className={classnames('gap-3 max-sm:pli-3', props.className)}
+                >
+                  {contact ? (
+                    contact.avatar ? (
+                      <Avatar
+                        alt={contact.fullName}
+                        src={contact.avatar}
+                        key={option.toLowerCase().replace(/\s+/g, '-')}
+                      />
+                    ) : (
+                      <CustomAvatar
+                        color={contact.avatarColor}
+                        skin='light'
+                        key={option.toLowerCase().replace(/\s+/g, '-')}
+                      >
+                        {getInitials(contact.fullName)}
+                      </CustomAvatar>
+                    )
+                  ) : null}
+                  {option}
+                </li>
+              )
             }}
           />
-          <div className='flex is-full items-center flex-auto sm:gap-x-3'>
-            <Autocomplete
-              fullWidth
+          {isBelowMdScreen && !disableDrawer ? (
+            <IconButton
+              className='mis-2'
               size='small'
-              id='select-contact'
-              options={chatStore.contacts.map(contact => contact.fullName) || []}
-              value={searchValue || null}
-              onChange={handleChange}
-              renderInput={params => (
-                <CustomTextField
-                  {...params}
-                  variant='outlined'
-                  placeholder='Search Contacts'
-                  slotProps={{
-                    input: {
-                      ...params.InputProps,
-                      startAdornment: (
-                        <InputAdornment position='start'>
-                          <i className='tabler-search' />
-                        </InputAdornment>
-                      )
-                    }
-                  }}
-                />
-              )}
-              renderOption={(props, option) => {
-                const contact = chatStore.contacts.find(contact => contact.fullName === option)
-
-                return (
-                  <li
-                    {...props}
-                    key={option.toLowerCase().replace(/\s+/g, '-')}
-                    className={classnames('gap-3 max-sm:pli-3', props.className)}
-                  >
-                    {contact ? (
-                      contact.avatar ? (
-                        <Avatar
-                          alt={contact.fullName}
-                          src={contact.avatar}
-                          key={option.toLowerCase().replace(/\s+/g, '-')}
-                        />
-                      ) : (
-                        <CustomAvatar
-                          color={contact.avatarColor}
-                          skin='light'
-                          key={option.toLowerCase().replace(/\s+/g, '-')}
-                        >
-                          {getInitials(contact.fullName)}
-                        </CustomAvatar>
-                      )
-                    ) : null}
-                    {option}
-                  </li>
-                )
+              onClick={() => {
+                setSidebarOpen(false)
+                setBackdropOpen(false)
               }}
-            />
-            {isBelowMdScreen ? (
-              <IconButton
-                className='mis-2'
-                size='small'
-                onClick={() => {
-                  setSidebarOpen(false)
-                  setBackdropOpen(false)
-                }}
-              >
-                <i className='tabler-x text-2xl' />
-              </IconButton>
-            ) : null}
-          </div>
+            >
+              <i className='tabler-x text-2xl' />
+            </IconButton>
+          ) : null}
         </div>
-        <ScrollWrapper isBelowLgScreen={isBelowLgScreen}>
-          <ul className='p-3 pbs-4'>
-            {renderChat({
-              chatStore,
-              getActiveUserData,
-              backdropOpen,
-              setSidebarOpen,
-              isBelowMdScreen,
-              setBackdropOpen
-            })}
-          </ul>
-        </ScrollWrapper>
-      </Drawer>
+      </div>
+      <ScrollWrapper isBelowLgScreen={isBelowLgScreen}>
+        <ul className='p-3 pbs-4'>
+          {renderChat({
+            chatStore,
+            getActiveUserData,
+            backdropOpen,
+            setSidebarOpen,
+            isBelowMdScreen,
+            setBackdropOpen
+          })}
+        </ul>
+      </ScrollWrapper>
+    </div>
+  )
+
+  return (
+    <>
+      {disableDrawer ? (
+        <div className='bs-full is-full overflow-hidden flex flex-col'>{SidebarContent}</div>
+      ) : (
+        <Drawer
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          className='bs-full'
+          variant={!isBelowMdScreen ? 'permanent' : 'persistent'}
+          ModalProps={{
+            disablePortal: true,
+            keepMounted: true // Better open performance on mobile.
+          }}
+          sx={{
+            zIndex: isBelowMdScreen && sidebarOpen ? 11 : 10,
+            position: !isBelowMdScreen ? 'static' : 'absolute',
+            ...(isBelowSmScreen && sidebarOpen && { width: '100%' }),
+            '& .MuiDrawer-paper': {
+              overflow: 'hidden',
+              boxShadow: 'none',
+              width: isBelowSmScreen ? '100%' : '370px',
+              position: !isBelowMdScreen ? 'static' : 'absolute'
+            }
+          }}
+        >
+          {SidebarContent}
+        </Drawer>
+      )}
 
       <UserProfileLeft
         userSidebar={userSidebar}
