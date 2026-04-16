@@ -15,13 +15,20 @@ export async function GET(request, { params }) {
   try {
     const { roomId: roomIdRaw } = await params
     const roomId = BigInt(roomIdRaw)
-    const userId = BigInt(session.user.id)
+    
+    if (!session.user?.id) {
+      console.warn('[Chat Messages API] User ID missing from session')
+      return NextResponse.json({ message: 'User ID missing in session' }, { status: 400 })
+    }
+    
+    const userIdStr = session.user.id.toString()
+    const userIdBigInt = BigInt(userIdStr)
     const url = new URL(request.url)
     const since = url.searchParams.get('since') // ISO string, opsional
 
     // Pastikan user adalah peserta room ini
     const participant = await prisma.chatParticipant.findFirst({
-      where: { chatRoomId: roomId, userId, bitActive: 1 }
+      where: { chatRoomId: roomId, userId: userIdBigInt, bitActive: 1 }
     })
 
     if (!participant) {
@@ -46,7 +53,7 @@ export async function GET(request, { params }) {
     // Reset unseen messages hanya saat initial load (tidak saat polling)
     if (!since) {
       await prisma.chatParticipant.updateMany({
-        where: { chatRoomId: roomId, userId, bitActive: 1 },
+        where: { chatRoomId: roomId, userId: userIdBigInt, bitActive: 1 },
         data: { unseenMsgs: 0 }
       })
     }
@@ -57,12 +64,12 @@ export async function GET(request, { params }) {
       time: msg.dtmInserted,
       senderId: msg.senderId.toString(),
       senderName: msg.sender.userName,
-      isMine: msg.senderId === userId
+      isMine: msg.senderId.toString() === userIdStr
     }))
 
     return NextResponse.json(formatted)
   } catch (error) {
-    console.error('Failed to fetch messages:', error)
+    console.error('🔴 [Chat Messages API] Failed to fetch messages:', error)
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 })
   }
 }
@@ -75,7 +82,13 @@ export async function POST(request, { params }) {
   try {
     const { roomId: roomIdRaw } = await params
     const roomId = BigInt(roomIdRaw)
-    const userId = BigInt(session.user.id)
+    
+    if (!session.user?.id) {
+      console.warn('[Chat Messages API] User ID missing from session for POST')
+      return NextResponse.json({ message: 'User ID missing in session' }, { status: 400 })
+    }
+    
+    const userIdBigInt = BigInt(session.user.id)
     const body = await request.json()
     const { message } = body
 
@@ -85,7 +98,7 @@ export async function POST(request, { params }) {
 
     // Pastikan user adalah peserta room ini
     const participant = await prisma.chatParticipant.findFirst({
-      where: { chatRoomId: roomId, userId, bitActive: 1 }
+      where: { chatRoomId: roomId, userId: userIdBigInt, bitActive: 1 }
     })
 
     if (!participant) {
@@ -96,7 +109,7 @@ export async function POST(request, { params }) {
     const newMessage = await prisma.chatMessage.create({
       data: {
         chatRoomId: roomId,
-        senderId: userId,
+        senderId: userIdBigInt,
         messageText: encrypt(message),
         bitActive: 1
       },
@@ -109,7 +122,7 @@ export async function POST(request, { params }) {
     await prisma.chatParticipant.updateMany({
       where: {
         chatRoomId: roomId,
-        userId: { not: userId },
+        userId: { not: userIdBigInt },
         bitActive: 1
       },
       data: { unseenMsgs: { increment: 1 } }
@@ -123,7 +136,7 @@ export async function POST(request, { params }) {
       senderName: newMessage.sender.userName
     }, { status: 201 })
   } catch (error) {
-    console.error('Failed to send message:', error)
+    console.error('🔴 [Chat Messages API] Failed to send message:', error)
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 })
   }
 }

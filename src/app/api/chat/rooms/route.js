@@ -12,13 +12,19 @@ export async function GET() {
   if (!session) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
   try {
-    const userId = BigInt(session.user.id)
+    if (!session.user?.id) {
+      console.warn('[Chat API] User ID missing from session:', session.user)
+      return NextResponse.json({ message: 'User ID missing in session' }, { status: 400 })
+    }
+
+    const userIdStr = session.user.id.toString()
+    const userIdBigInt = BigInt(userIdStr)
 
     const rooms = await prisma.chatRoom.findMany({
       where: {
         bitActive: 1,
         participants: {
-          some: { userId, bitActive: 1 }
+          some: { userId: userIdBigInt, bitActive: 1 }
         }
       },
       include: {
@@ -44,15 +50,15 @@ export async function GET() {
     // Format menjadi struktur yang diharapkan frontend chat Vuexy
     const formatted = rooms.map(room => {
       // Cari lawan bicara (bukan current user) untuk DM
-      const otherParticipant = room.participants.find(p => p.userId !== userId)
+      const otherParticipant = room.participants.find(p => p.userId.toString() !== userIdStr)
       const lastMsg = room.messages[0]
-      const myParticipant = room.participants.find(p => p.userId === userId)
+      const myParticipant = room.participants.find(p => p.userId.toString() === userIdStr)
 
       return {
         id: room.chatRoomId.toString(),
         isGroup: room.isGroup,
         name: room.isGroup ? room.groupName : otherParticipant?.mUser?.userName || 'Unknown',
-        avatar: null, // Bisa ditambahkan avatar URL dari DB di masa mendatang
+        avatar: null, 
         lastMessage: decrypt(lastMsg?.messageText) || null,
         lastMessageTime: lastMsg?.dtmInserted || null,
         unseenMsgs: myParticipant?.unseenMsgs || 0,
@@ -62,8 +68,11 @@ export async function GET() {
 
     return NextResponse.json(formatted)
   } catch (error) {
-    console.error('Failed to fetch chat rooms:', error)
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 })
+    console.error('🔴 [Chat API] Failed to fetch chat rooms:', error)
+    return NextResponse.json({ 
+      message: 'Internal Server Error', 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    }, { status: 500 })
   }
 }
 
