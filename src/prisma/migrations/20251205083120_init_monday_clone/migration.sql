@@ -9,7 +9,7 @@
 
 */
 -- AlterEnum
-ALTER TYPE "ColumnType" ADD VALUE 'TAGS';
+-- ALTER TYPE "ColumnType" ADD VALUE 'TAGS';
 
 -- DropForeignKey
 ALTER TABLE "trColumnProgressLink" DROP CONSTRAINT "trColumnProgressLink_progressColumnId_fkey";
