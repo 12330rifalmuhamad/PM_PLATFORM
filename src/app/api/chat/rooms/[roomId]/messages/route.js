@@ -13,7 +13,8 @@ export async function GET(request, { params }) {
   if (!session) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
   try {
-    const roomId = BigInt(params.roomId)
+    const { roomId: roomIdRaw } = await params
+    const roomId = BigInt(roomIdRaw)
     const userId = BigInt(session.user.id)
     const url = new URL(request.url)
     const since = url.searchParams.get('since') // ISO string, opsional
@@ -72,7 +73,8 @@ export async function POST(request, { params }) {
   if (!session) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
   try {
-    const roomId = BigInt(params.roomId)
+    const { roomId: roomIdRaw } = await params
+    const roomId = BigInt(roomIdRaw)
     const userId = BigInt(session.user.id)
     const body = await request.json()
     const { message } = body
@@ -115,7 +117,7 @@ export async function POST(request, { params }) {
 
     return NextResponse.json({
       id: newMessage.messageId.toString(),
-      message: newMessage.messageText,
+      message: message,
       time: newMessage.dtmInserted,
       senderId: newMessage.senderId.toString(),
       senderName: newMessage.sender.userName

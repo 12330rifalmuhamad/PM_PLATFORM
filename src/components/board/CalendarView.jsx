@@ -3,37 +3,66 @@
 import React, { useMemo, useState } from 'react'
 
 import { useSWRConfig } from 'swr'
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button } from '@mui/material'
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, FormControl, InputLabel, Select, MenuItem, Box as MuiBox, Typography as MuiTypography } from '@mui/material'
 
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction' // untuk event klik, dll.
 
+const getStatusOptions = column => {
+  if (!column) return []
+
+  if (column.options?.length > 0) {
+    return column.options.map(opt => ({
+      label: opt.label,
+      color: opt.color
+    }))
+  }
+
+  if (column.columnName?.toLowerCase() === 'prioritas') {
+    return [
+      { label: 'Tinggi', color: 'bg-purple-500/10' },
+      { label: 'Medium', color: 'bg-sky-500/10' },
+      { label: 'Rendah', color: 'bg-green-500/10' }
+    ]
+  }
+
+  return [
+    { label: 'Sedang Dikerjakan', color: 'bg-yellow-500' },
+    { label: 'Buntu', color: 'bg-red-500' },
+    { label: 'Selesai', color: 'bg-green-500' },
+    { label: 'Belum Mulai', color: 'bg-gray-500' }
+  ]
+}
+
 // Fungsi untuk mempersiapkan data event untuk kalender
 const prepareCalendarEvents = board => {
   if (!board?.columns || !board?.groups) return []
 
-  // 1. Cari ID kolom tanggal di papan Anda
-  // Kita asumsikan kolom tanggal pertama adalah tanggal event
   const dateColumn = board.columns.find(c => c.columnType === 'DATE')
+  const statusColumn = board.columns.find(c => c.columnType === 'STATUS')
 
-  if (!dateColumn) return [] // Jika tidak ada kolom tanggal, tidak ada event
+  if (!dateColumn) return []
 
   const events = []
 
-  // 2. Loop semua item/tugas untuk membuat event
   board.groups.forEach(group => {
     group.items.forEach(item => {
       const dateValue = item.values.find(v => v.columnId === dateColumn.columnId)
+      const statusValue = statusColumn 
+        ? item.values.find(v => v.columnId === statusColumn.columnId)?.value 
+        : null
 
       if (dateValue?.value) {
         events.push({
           id: item.taskId,
           title: item.taskTitle,
-          date: dateValue.value // Format 'YYYY-MM-DD'
-          // Anda bisa menambahkan properti lain seperti warna
-          // backgroundColor: group.groupColor,
-          // borderColor: group.groupColor
+          date: dateValue.value,
+          extendedProps: {
+            status: statusValue,
+            statusColumn: statusColumn,
+            colorClass: getStatusOptions(statusColumn).find(opt => opt.label === statusValue)?.color || 'bg-gray-500'
+          }
         })
       }
     })
@@ -57,14 +86,42 @@ const CalendarView = ({ board }) => {
   const [isEventDetailOpen, setIsEventDetailOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [editTaskTitle, setEditTaskTitle] = useState('')
+  const [selectedStatus, setSelectedStatus] = useState('')
+  const [statusColumn, setStatusColumn] = useState(null)
 
   const handleEventClick = clickInfo => {
+    const { event } = clickInfo
     setSelectedEvent({
-      id: clickInfo.event.id,
-      title: clickInfo.event.title
+      id: event.id,
+      title: event.title
     })
-    setEditTaskTitle(clickInfo.event.title)
+    setEditTaskTitle(event.title)
+    setSelectedStatus(event.extendedProps.status || '')
+    setStatusColumn(event.extendedProps.statusColumn)
     setIsEventDetailOpen(true)
+  }
+
+  const handleUpdateStatus = async (newStatus) => {
+    if (!selectedEvent || !statusColumn) return
+
+    setSelectedStatus(newStatus)
+
+    try {
+      const response = await fetch(`/api/tasks/${selectedEvent.id}/values`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          intColumn_ID: statusColumn.columnId,
+          txtValue: newStatus
+        })
+      })
+
+      if (response.ok) {
+        mutate(`/api/boards/${board.boardId}`)
+      }
+    } catch (error) {
+      console.error('Failed to update status:', error)
+    }
   }
 
   const handleUpdateNote = async () => {
@@ -185,6 +242,22 @@ const CalendarView = ({ board }) => {
           center: 'title',
           right: 'dayGridMonth,dayGridWeek,dayGridDay'
         }}
+        eventContent={(eventInfo) => {
+          const { status, colorClass } = eventInfo.event.extendedProps
+          
+          return (
+            <div className='flex flex-col p-1 overflow-hidden w-full'>
+              <div className='font-bold truncate text-[11px] leading-tight'>
+                {eventInfo.event.title}
+              </div>
+              {status && (
+                <div className={`mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold w-fit max-w-full truncate ${colorClass} text-white`}>
+                  {status}
+                </div>
+              )}
+            </div>
+          )
+        }}
       />
 
       <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)} fullWidth maxWidth="sm">
@@ -213,16 +286,43 @@ const CalendarView = ({ board }) => {
       <Dialog open={isEventDetailOpen} onClose={() => setIsEventDetailOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Detail Notes</DialogTitle>
         <DialogContent dividers>
-          <TextField
-            autoFocus
-            fullWidth
-            multiline
-            rows={4}
-            label="Isi Notes"
-            variant="outlined"
-            value={editTaskTitle}
-            onChange={(e) => setEditTaskTitle(e.target.value)}
-          />
+          <div className='flex flex-col gap-6'>
+            <TextField
+              autoFocus
+              fullWidth
+              multiline
+              rows={4}
+              label="Isi Notes"
+              variant="outlined"
+              value={editTaskTitle}
+              onChange={(e) => setEditTaskTitle(e.target.value)}
+            />
+
+            {statusColumn && (
+              <FormControl fullWidth>
+                <InputLabel id="status-select-label">Status</InputLabel>
+                <Select
+                  labelId="status-select-label"
+                  id="status-select"
+                  value={selectedStatus}
+                  label="Status"
+                  onChange={(e) => handleUpdateStatus(e.target.value)}
+                >
+                  <MenuItem value="">
+                    <em className='text-textDisabled'>Belum Ada Status</em>
+                  </MenuItem>
+                  {getStatusOptions(statusColumn).map((opt) => (
+                    <MenuItem key={opt.label} value={opt.label}>
+                       <MuiBox sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                         <div className={`w-3 h-3 rounded-full ${opt.color || 'bg-gray-500'}`} />
+                         <MuiTypography variant="body2">{opt.label}</MuiTypography>
+                       </MuiBox>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+          </div>
         </DialogContent>
         <DialogActions className='px-6 py-4 flex justify-between'>
           <Button onClick={handleDeleteNote} color="error" variant="outlined" startIcon={<i className='tabler-trash' />}>
