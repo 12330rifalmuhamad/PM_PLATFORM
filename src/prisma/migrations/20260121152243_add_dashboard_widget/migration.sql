@@ -1,5 +1,5 @@
 -- AlterTable
-ALTER TABLE "mBoardColumn" ADD COLUMN     "intWidth" INTEGER DEFAULT 200;
+-- ALTER TABLE "mBoardColumn" ADD COLUMN     "intWidth" INTEGER DEFAULT 200;
 
 -- CreateTable
 CREATE TABLE "trDashboardWidget" (
