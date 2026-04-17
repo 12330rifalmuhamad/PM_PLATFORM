@@ -12,7 +12,8 @@ import Typography from '@mui/material/Typography'
 import Avatar from '@mui/material/Avatar'
 import LinearProgress from '@mui/material/LinearProgress'
 import Chip from '@mui/material/Chip'
-import { useTheme } from '@mui/material/useTheme'
+import Box from '@mui/material/Box'
+import { useTheme } from '@mui/material/styles'
 
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
@@ -123,8 +124,6 @@ const MonitoringHub = () => {
   )
 }
 
-// Wrapping Box for padding/layout consistency
-import Box from '@mui/material/Box'
 
 const MonitoringHubPage = () => {
   return (
