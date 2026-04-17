@@ -16,6 +16,7 @@ import AuthGuard from '@/hocs/AuthGuard'
 import ModalProvider from '@/components/ModalProvider'
 import RotateOverlay from '@/components/layout/shared/RotateOverlay'
 import FloatingChatWidget from '@/views/apps/chat/FloatingChatWidget'
+import FloatingNotesWidget from '@/views/apps/notes/FloatingNotesWidget'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
@@ -57,6 +58,7 @@ const ProtectedLayoutContent = props => {
         </ScrollToTop>
         <Customizer dir={direction} />
         <FloatingChatWidget />
+        <FloatingNotesWidget />
       </AuthGuard>
     </>
   )

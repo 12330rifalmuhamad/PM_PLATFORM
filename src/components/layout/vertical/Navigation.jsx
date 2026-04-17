@@ -563,6 +563,13 @@ export default function Sidebar() {
               isCollapsed={isCollapsed}
             />
             <NavItem href='#' icon={<i className='tabler-calendar-check' />} text='My work' isCollapsed={isCollapsed} />
+            <NavItem
+              href='/apps/monitoring-hub'
+              icon={<i className='tabler-chart-pie' />}
+              text='Monitoring Hub'
+              active={pathname.includes('/apps/monitoring-hub')}
+              isCollapsed={isCollapsed}
+            />
           </ul>
         </nav>
         <hr className='mx-2' style={{ borderColor: theme.palette.divider }} />

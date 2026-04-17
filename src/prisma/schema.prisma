@@ -120,6 +120,20 @@ model DashboardWidget {
   @@map("trDashboardWidget")
 }
 
+model QuickNote {
+  noteId        BigInt    @id @default(autoincrement()) @map("intNote_ID")
+  userId        BigInt    @map("intUser_ID")
+  title         String?   @map("txtTitle")
+  content       String    @map("txtContent") @db.Text
+  color         String?   @default("#ffffd1") @map("txtColor")
+  isPinned      Boolean   @default(false) @map("bitIsPinned")
+  dtmInserted   DateTime  @default(now()) @map("dtmInserted")
+  dtmUpdated    DateTime? @updatedAt @map("dtmUpdated")
+  bitActive     Int?      @default(1) @map("bitActive")
+
+  @@map("trQuickNote")
+}
+
 model BoardColumn {
   columnId      BigInt     @id @default(autoincrement()) @map("intColumn_ID")
   boardId       BigInt     @map("intBoard_ID")
