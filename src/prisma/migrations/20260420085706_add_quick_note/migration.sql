@@ -1,5 +1,5 @@
--- AlterEnum
-ALTER TYPE "ColumnType" ADD VALUE 'TAGS';
+-- -- AlterEnum
+-- ALTER TYPE "ColumnType" ADD VALUE 'TAGS';
 
 -- AlterTable
 ALTER TABLE "mBoardColumn" ADD COLUMN     "intWidth" INTEGER DEFAULT 200;
