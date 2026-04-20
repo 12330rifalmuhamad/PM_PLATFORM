@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react'
 import { useSWRConfig } from 'swr'
 import ReactECharts from 'echarts-for-react'
-import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, IconButton, Card, CardContent, Typography, Grid, Select, InputLabel, FormControl, Alert, Tooltip, Divider, useTheme, useMediaQuery } from '@mui/material'
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, IconButton, Card, CardContent, Typography, Grid, Select, InputLabel, FormControl, Alert, Tooltip, Divider, useTheme, useMediaQuery, Checkbox, ListItemText } from '@mui/material'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import { format, isValid, parseISO } from 'date-fns'
@@ -102,6 +102,7 @@ const DashboardView = ({ board, searchQuery }) => {
     const defaultSettings = {
         metrics: [],
         breakdownColumnId: '',
+        filterGroupIds: [],
         yAxisMin: null,
         yAxisMax: null,
         yAxisAuto: true,
@@ -280,8 +281,9 @@ const DashboardView = ({ board, searchQuery }) => {
           return (valObj.value === null || valObj.value === undefined || valObj.value === '') ? 'Unassigned' : valObj.value
     }
 
-    const filteredItems = widget.filterGroupId 
-      ? allItems.filter(item => String(item.groupId) === String(widget.filterGroupId))
+    const filterGroupIds = widget.settings?.filterGroupIds || (widget.filterGroupId ? [String(widget.filterGroupId)] : [])
+    const filteredItems = filterGroupIds.length > 0
+      ? allItems.filter(item => filterGroupIds.includes(String(item.groupId)))
       : allItems
 
     filteredItems.forEach(item => {
@@ -563,8 +565,9 @@ const DashboardView = ({ board, searchQuery }) => {
   const SummaryWidget = ({ widget, isPreview = false }) => {
     const { labels, series, totals } = processWidgetData(widget)
     
-    // Find filtered group name
-    const filteredGroup = widget.filterGroupId ? board.groups?.find(g => String(g.groupId) === String(widget.filterGroupId)) : null
+    // Find filtered group names
+    const filterGroupIds = widget.settings?.filterGroupIds || (widget.filterGroupId ? [String(widget.filterGroupId)] : [])
+    const filteredGroups = filterGroupIds.map(id => board.groups?.find(g => String(g.groupId) === String(id))).filter(Boolean)
 
     // Helper to find color of a label if it's a group
     const getLabelColor = (label) => {
@@ -593,9 +596,9 @@ const DashboardView = ({ board, searchQuery }) => {
                     <Typography variant='h6' align='center' sx={{ mb: 1, fontWeight: 600 }}>
                         {widget.title}
                     </Typography>
-                    {filteredGroup && (
+                    {filteredGroups.length > 0 && (
                         <Typography variant='caption' align='center' display='block' sx={{ mb: 3, opacity: 0.7 }}>
-                           Filtered Group: {filteredGroup.groupName}
+                           Filtered Groups: {filteredGroups.map(g => g.groupName).join(', ')}
                         </Typography>
                     )}
                 </>
@@ -877,16 +880,30 @@ const DashboardView = ({ board, searchQuery }) => {
                            <FormControl fullWidth className='mt-4'>
                                 <InputLabel>Filter by Group</InputLabel>
                                 <Select
+                                    multiple
                                     label="Filter by Group"
-                                    value={currentWidgetConfig.filterGroupId || ''}
-                                    onChange={e => setCurrentWidgetConfig({ ...currentWidgetConfig, filterGroupId: e.target.value })}
+                                    value={currentWidgetConfig.settings?.filterGroupIds || (currentWidgetConfig.filterGroupId ? [String(currentWidgetConfig.filterGroupId)] : [])}
+                                    onChange={e => {
+                                        const vals = e.target.value
+                                        setCurrentWidgetConfig({ 
+                                            ...currentWidgetConfig, 
+                                            settings: { ...currentWidgetConfig.settings, filterGroupIds: vals } 
+                                        })
+                                    }}
+                                    renderValue={(selected) => {
+                                        if (selected.length === 0) return <em>All Groups (Default)</em>
+                                        return selected.map(id => board.groups?.find(g => String(g.groupId) === String(id))?.groupName || `Group ${id}`).join(', ')
+                                    }}
                                 >
-                                    <MenuItem value=""><em>All Groups (Default)</em></MenuItem>
-                                    {(board?.groups || []).map(g => (
-                                        <MenuItem key={g.groupId} value={String(g.groupId)}>
-                                            {g.groupName}
-                                        </MenuItem>
-                                    ))}
+                                    {(board?.groups || []).map(g => {
+                                        const isChecked = (currentWidgetConfig.settings?.filterGroupIds || (currentWidgetConfig.filterGroupId ? [String(currentWidgetConfig.filterGroupId)] : [])).includes(String(g.groupId))
+                                        return (
+                                            <MenuItem key={g.groupId} value={String(g.groupId)}>
+                                                <Checkbox checked={isChecked} />
+                                                <ListItemText primary={g.groupName} />
+                                            </MenuItem>
+                                        )
+                                    })}
                                 </Select>
                            </FormControl>
 
