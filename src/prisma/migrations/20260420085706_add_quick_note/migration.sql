@@ -2,13 +2,13 @@
 -- ALTER TYPE "ColumnType" ADD VALUE 'TAGS';
 
 -- AlterTable
-ALTER TABLE "mBoardColumn" ADD COLUMN     "intWidth" INTEGER DEFAULT 200;
+ALTER TABLE "mBoardColumn" ADD COLUMN IF NOT EXISTS "intWidth" INTEGER DEFAULT 200;
 
 -- AlterTable
-ALTER TABLE "mGroup" ADD COLUMN     "bitCollapsed" INTEGER DEFAULT 0;
+ALTER TABLE "mGroup" ADD COLUMN IF NOT EXISTS "bitCollapsed" INTEGER DEFAULT 0;
 
 -- CreateTable
-CREATE TABLE "trDashboardWidget" (
+CREATE TABLE IF NOT EXISTS "trDashboardWidget" (
     "intWidget_ID" BIGSERIAL NOT NULL,
     "intBoard_ID" BIGINT NOT NULL,
     "txtTitle" TEXT NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE "trDashboardWidget" (
 );
 
 -- CreateTable
-CREATE TABLE "trQuickNote" (
+CREATE TABLE IF NOT EXISTS "trQuickNote" (
     "intNote_ID" BIGSERIAL NOT NULL,
     "intUser_ID" BIGINT NOT NULL,
     "txtTitle" TEXT,
@@ -45,7 +45,7 @@ CREATE TABLE "trQuickNote" (
 );
 
 -- CreateTable
-CREATE TABLE "BoardTemplate" (
+CREATE TABLE IF NOT EXISTS "BoardTemplate" (
     "templateId" SERIAL NOT NULL,
     "templateName" TEXT NOT NULL,
     "description" TEXT,
@@ -56,7 +56,7 @@ CREATE TABLE "BoardTemplate" (
 );
 
 -- CreateTable
-CREATE TABLE "trChatRoom" (
+CREATE TABLE IF NOT EXISTS "trChatRoom" (
     "intChatRoom_ID" BIGSERIAL NOT NULL,
     "bitIsGroup" BOOLEAN NOT NULL DEFAULT false,
     "txtGroupName" TEXT,
@@ -69,7 +69,7 @@ CREATE TABLE "trChatRoom" (
 );
 
 -- CreateTable
-CREATE TABLE "trChatParticipant" (
+CREATE TABLE IF NOT EXISTS "trChatParticipant" (
     "intParticipant_ID" BIGSERIAL NOT NULL,
     "intChatRoom_ID" BIGINT NOT NULL,
     "intUser_ID" BIGINT NOT NULL,
@@ -81,7 +81,7 @@ CREATE TABLE "trChatParticipant" (
 );
 
 -- CreateTable
-CREATE TABLE "trChatMessage" (
+CREATE TABLE IF NOT EXISTS "trChatMessage" (
     "intMessage_ID" BIGSERIAL NOT NULL,
     "intChatRoom_ID" BIGINT NOT NULL,
     "intSender_ID" BIGINT NOT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE "trChatMessage" (
 );
 
 -- CreateTable
-CREATE TABLE "trInternalMessage" (
+CREATE TABLE IF NOT EXISTS "trInternalMessage" (
     "intMessage_ID" BIGSERIAL NOT NULL,
     "intSender_ID" BIGINT NOT NULL,
     "intRecipient_ID" BIGINT NOT NULL,
@@ -114,7 +114,7 @@ CREATE TABLE "trInternalMessage" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "trChatParticipant_intChatRoom_ID_intUser_ID_key" ON "trChatParticipant"("intChatRoom_ID", "intUser_ID");
+CREATE UNIQUE INDEX IF NOT EXISTS "trChatParticipant_intChatRoom_ID_intUser_ID_key" ON "trChatParticipant"("intChatRoom_ID", "intUser_ID");
 
 -- AddForeignKey
 ALTER TABLE "trDashboardWidget" ADD CONSTRAINT "trDashboardWidget_intBoard_ID_fkey" FOREIGN KEY ("intBoard_ID") REFERENCES "mBoard"("intBoard_ID") ON DELETE CASCADE ON UPDATE CASCADE;
