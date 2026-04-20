@@ -45,6 +45,14 @@ async function main() {
     data: { userName: 'Budi Santoso', email: 'budi@email.com', passwordHash: hashedPassword }
   })
 
+  console.log('📝 Membuat catatan awal...')
+  await prisma.quickNote.createMany({
+    data: [
+      { userId: rifal.userId, title: 'Meeting Perkembangan', content: 'Scope proyek Peluncuran Produk Q4 sudah disetujui stakeholder.' },
+      { userId: rifal.userId, title: 'Ide Fitur', content: 'Tambahkan integrasi Gantt Chart di fase 2.' }
+    ]
+  })
+
   // ====================================================================
   // PERBAIKAN DI SINI: Proses Dibuat Bertahap
   // ====================================================================
@@ -144,6 +152,30 @@ async function main() {
       ]
     })
   }
+
+  console.log('📈 Membuat log aktivitas (7 hari terakhir)...')
+  const days = [0, 1, 2, 3, 4, 5, 6]
+  const activities = []
+  
+  for (const day of days) {
+    const date = new Date()
+    date.setDate(date.getDate() - day)
+    
+    // Random 2-5 activities per day
+    const count = Math.floor(Math.random() * 4) + 2
+    for (let i = 0; i < count; i++) {
+        activities.push({
+            taskId: firstTask.taskId,
+            userId: rifal.userId,
+            actionType: i % 2 === 0 ? 'UPDATE_STATUS' : 'UPDATE_CONTENT',
+            description: `Aktivitas testing hari ke-${day}`,
+            dtmInserted: date,
+            txtInsertedBy: 'System'
+        })
+    }
+  }
+
+  await prisma.logTaskActivity.createMany({ data: activities })
 
   // Board kedua di workspace lain, hanya untuk Budi
   const board2 = await prisma.board.create({

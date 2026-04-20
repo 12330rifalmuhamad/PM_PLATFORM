@@ -8,6 +8,7 @@ import classnames from 'classnames'
 import NavToggle from './NavToggle'
 
 import LanguageDropdown from '@components/layout/shared/LanguageDropdown'
+import FullscreenToggle from '@components/layout/shared/FullscreenToggle'
 import ModeDropdown from '@components/layout/shared/ModeDropdown'
 import ShortcutsDropdown from '@components/layout/shared/ShortcutsDropdown'
 import NotificationsDropdown from '@components/layout/shared/NotificationsDropdown'
@@ -84,6 +85,7 @@ const NavbarContent = () => {
       </div>
       <div className='flex items-center'>
         <LanguageDropdown />
+        <FullscreenToggle />
         <ModeDropdown />
         <ShortcutsDropdown shortcuts={shortcuts} />
         <NotificationsDropdown notifications={notifications} onRefresh={fetchNotifications} />

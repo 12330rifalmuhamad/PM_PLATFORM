@@ -29,7 +29,7 @@ const RotateOverlay = () => {
       }}
     >
         <style jsx global>{`
-          @media screen and (max-width: 768px) and (orientation: portrait) {
+          @media screen and (max-width: 600px) and (orientation: portrait) {
             .rotate-overlay {
               display: flex !important;
             }

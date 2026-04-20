@@ -103,7 +103,8 @@ export async function GET() {
           time: formatTimeAgo(n.dtmInserted),
           read: n.isRead === 1,
           count: null,
-          link: n.link || null
+          link: n.link || null,
+          notificationId: n.notificationId?.toString()
         })
       })
     } catch {
@@ -131,7 +132,7 @@ export async function PATCH(request) {
   try {
     const userId = BigInt(session.user.id)
     const body = await request.json()
-    const { roomId, markAll } = body
+    const { roomId, notificationId, markAll } = body
 
     if (markAll) {
       // Reset semua unseen chat
@@ -139,11 +140,23 @@ export async function PATCH(request) {
         where: { userId, bitActive: 1 },
         data: { unseenMsgs: 0 }
       })
+
+      // Reset semua notification DB
+      await prisma.trNotification.updateMany({
+        where: { userId, bitActive: 1 },
+        data: { isRead: 1 }
+      })
     } else if (roomId) {
       // Reset unseen untuk room tertentu
       await prisma.chatParticipant.updateMany({
         where: { userId, chatRoomId: BigInt(roomId), bitActive: 1 },
         data: { unseenMsgs: 0 }
+      })
+    } else if (notificationId) {
+      // Reset untuk notification DB tertentu
+      await prisma.trNotification.update({
+        where: { notificationId: BigInt(notificationId) },
+        data: { isRead: 1 }
       })
     }
 

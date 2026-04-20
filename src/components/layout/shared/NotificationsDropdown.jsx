@@ -116,10 +116,14 @@ const NotificationDropdown = ({ notifications, onRefresh }) => {
 
     // Call API to mark as read
     try {
+      const payload = {}
+      if (notification.roomId) payload.roomId = notification.roomId
+      if (notification.notificationId) payload.notificationId = notification.notificationId
+
       await fetch('/api/notifications', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId: notification.roomId })
+        body: JSON.stringify(payload)
       })
 
       if (onRefresh) onRefresh()
@@ -220,28 +224,26 @@ const NotificationDropdown = ({ notifications, onRefresh }) => {
                     {notificationCount > 0 && (
                       <Chip size='small' variant='tonal' color='primary' label={`${notificationCount} New`} />
                     )}
-                    <Tooltip
-                      title={readAll ? 'Mark all as unread' : 'Mark all as read'}
-                      placement={placement === 'bottom-end' ? 'left' : 'right'}
-                      slotProps={{
-                        popper: {
-                          sx: {
-                            '& .MuiTooltip-tooltip': {
-                              transformOrigin:
-                                placement === 'bottom-end' ? 'right center !important' : 'right center !important'
+                    {notificationsState.length > 0 && (
+                      <Tooltip
+                        title={readAll ? 'Mark all as unread' : 'Mark all as read'}
+                        placement={placement === 'bottom-end' ? 'left' : 'right'}
+                        slotProps={{
+                          popper: {
+                            sx: {
+                              '& .MuiTooltip-tooltip': {
+                                transformOrigin:
+                                  placement === 'bottom-end' ? 'right center !important' : 'right center !important'
+                              }
                             }
                           }
-                        }
-                      }}
-                    >
-                      {notificationsState.length > 0 ? (
+                        }}
+                      >
                         <IconButton size='small' onClick={() => readAllNotifications()} className='text-textPrimary'>
                           <i className={readAll ? 'tabler-mail' : 'tabler-mail-opened'} />
                         </IconButton>
-                      ) : (
-                        <></>
-                      )}
-                    </Tooltip>
+                      </Tooltip>
+                    )}
                   </div>
                   <Divider />
                   <ScrollWrapper hidden={hidden}>

@@ -116,7 +116,8 @@
     DialogTitle,
     DialogContent,
     DialogActions,
-    ListItem
+    ListItem,
+    useTheme
   } from '@mui/material'
 
   import { useDragAndDrop } from '@formkit/drag-and-drop/react'
@@ -188,7 +189,7 @@
     const name = user.userName || user.name || 'User'
     return (
       <Tooltip title={name}>
-        <MuiAvatar sx={{ width: { xs: 24, md: 28 }, height: { xs: 24, md: 28 }, fontSize: { xs: '0.75rem', md: '0.875rem' }, bgcolor: 'primary.main', color: 'primary.contrastText', cursor: 'pointer' }}>
+        <MuiAvatar sx={{ width: { xs: 32, md: 28 }, height: { xs: 32, md: 28 }, fontSize: { xs: '0.875rem', md: '0.875rem' }, bgcolor: 'primary.main', color: 'primary.contrastText', cursor: 'pointer' }}>
           {name.charAt(0).toUpperCase()}
         </MuiAvatar>
       </Tooltip>
@@ -208,9 +209,13 @@
       : `${formatTimelineDate(start)} - ${formatTimelineDate(end)}`
 
     return (
-      <div className='w-full px-1 md:px-2 py-0.5 md:py-1 h-full flex items-center'>
+      <div className='w-full px-2 py-1 h-full flex items-center'>
         <div
-          className={`flex items-center justify-center text-[10px] md:text-[11px] text-white font-medium rounded-full bg-[#00c875] hover:bg-[#00b569] h-5 md:h-6 w-full truncate px-1 md:px-2 cursor-pointer transition-colors relative`}
+          className={`flex items-center justify-center text-[10px] md:text-[11px] text-white font-semibold rounded-lg bg-gradient-to-r from-success-main to-success-dark h-5 md:h-6 w-full truncate px-2 shadow-sm relative transition-all hover:scale-[1.02]`}
+          style={{ 
+              backgroundColor: '#00c875',
+              boxShadow: '0 2px 4px rgba(0, 200, 117, 0.2)'
+          }}
           title={displayRange}
         >
           {isMilestone && <i className='tabler-diamond-filled mr-1 text-[9px] md:text-[10px]' />}
@@ -221,6 +226,7 @@
   }
 
   const StatusCell = ({ value, column }) => {
+    const theme = useTheme()
     const options = useMemo(() => {
       if (column.options?.length > 0) {
         return column.options.map(opt => ({
@@ -250,22 +256,40 @@
     const displayText = value || ''
 
     if (column.columnName.toLowerCase() === 'prioritas') {
-      const colors = option ? `${option.color} ${option.text}` : 'text-gray-400 border border-gray-600'
-      const borderClass = option && option.color.includes('/10') ? `border border-${option.color.split('-')[1]}-800` : ''
-
+      const colors = option ? `${option.color} ${option.text}` : 'text-gray-400 border border-divider'
+      
       return (
-        <div
-          className={`flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium ${colors} ${borderClass}`}
-        >
-          {displayText}
+        <div className="flex items-center justify-center w-full h-full px-2">
+            <div
+            className={`flex items-center justify-center px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold shadow-sm ${colors} border border-transparent`}
+            style={option?.color.includes('/10') ? { 
+                backgroundColor: hexToRGBA(theme.palette.primary.main, 0.1),
+                color: theme.palette.primary.main
+            } : {}}
+            >
+            {displayText}
+            </div>
         </div>
       )
     }
 
     const colors = option ? `${option.color} ${option.text}` : 'bg-actionHover text-textPrimary'
+    const pillStyles = option ? { 
+        borderRadius: '20px',
+        margin: '4px 8px',
+        height: '24px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+    } : {}
 
     return (
-      <div className={`flex items-center justify-center w-full h-full text-[11px] md:text-xs font-bold ${colors}`}>{displayText}</div>
+      <div className="flex items-center justify-center w-full h-full p-1">
+          <div 
+            className={`flex items-center justify-center w-full h-7 text-[11px] md:text-xs font-bold transition-transform hover:scale-[1.02] cursor-pointer ${colors}`}
+            style={pillStyles}
+          >
+            {displayText}
+          </div>
+      </div>
     )
   }
 
@@ -317,10 +341,10 @@
     const fileCount = files.length
 
     return (
-      <div className='flex items-center justify-center gap-2 text-textSecondary w-full h-full relative group'>
-        <div className='flex items-center gap-1 pointer-events-none'>
-          <i className='tabler-paperclip' />
-          <span>{fileCount > 0 ? fileCount : '-'}</span>
+      <div className='flex items-center justify-center gap-2 text-textSecondary w-full h-full relative group transition-colors hover:bg-actionHover/5 rounded'>
+        <div className='flex items-center gap-1.5 pointer-events-none'>
+          <i className='tabler-paperclip text-lg' />
+          <span className="text-xs font-medium">{fileCount > 0 ? fileCount : '—'}</span>
         </div>
         
         {/* Actions */}
@@ -453,7 +477,7 @@
       return (
         <div className='w-full h-full px-3 flex items-center'>
           <input
-            className='bg-transparent w-full outline-none text-sm text-textPrimary truncate border-none p-0 focus:ring-0'
+            className='bg-transparent w-full outline-none text-[16px] md:text-sm text-textPrimary truncate border-none p-0 focus:ring-0'
             value={item.taskTitle}
             onChange={e => onUpdateValue(item, { columnType: 'TITLE' }, e.target.value)}
             onClick={e => e.stopPropagation()}
@@ -500,7 +524,8 @@
               checked={cellValue?.value === 'true'}
               onChange={e => onUpdateValue(item, column, e.target.checked.toString())}
               onClick={e => e.stopPropagation()}
-              size='small'
+              size='medium'
+              sx={{ p: { xs: 1, md: 0.5 } }}
             />
           </div>
         )
@@ -519,7 +544,7 @@
       case 'NUMBER':
         return (
           <input
-            className='bg-transparent w-full text-center outline-none text-xs text-textPrimary truncate border-none focus:ring-0'
+            className='bg-transparent w-full text-center outline-none text-[16px] md:text-xs text-textPrimary truncate border-none focus:ring-0'
             type='number'
             value={cellValue?.value || ''}
             placeholder='-'
@@ -538,7 +563,7 @@
         return (
           <div className='w-full h-full max-h-[80px] overflow-y-auto custom-scrollbar px-1'>
             <textarea
-              className='bg-transparent w-full h-full text-left outline-none text-xs text-textPrimary border-none focus:ring-0 resize-none py-2'
+              className='bg-transparent w-full h-full text-left outline-none text-[16px] md:text-xs text-textPrimary border-none focus:ring-0 resize-none py-2'
               value={cellValue?.value || ''}
               placeholder='-'
               onChange={e => onUpdateValue(item, column, e.target.value)}
@@ -574,20 +599,21 @@
     }
 
     return (
-      <Box sx={{ width: '100%', pl: 5, pr: 0, py: 1, backgroundColor: 'background.default' }}>
+      <Box sx={{ width: '100%', pl: 6, pr: 0, py: 1.5, backgroundColor: 'background.default' }}>
         <div className='flex relative'>
           <Box
             sx={{
               position: 'absolute',
-              left: -12,
-              top: -18,
-              bottom: 24,
-              width: 16,
+              left: -10,
+              top: -24,
+              bottom: 30,
+              width: 14,
               borderLeft: '2px solid',
               borderBottom: '2px solid',
               borderColor: 'divider',
-              borderBottomLeftRadius: 12,
-              zIndex: 0
+              borderBottomLeftRadius: 10,
+              zIndex: 0,
+              opacity: 0.6
             }}
           />
           <Box
@@ -595,12 +621,13 @@
             sx={{
               width: '100%',
               backgroundColor: 'background.paper',
-              borderLeft: 1,
+              border: 1,
               borderColor: 'divider',
               overflowX: 'auto',
-              boxShadow: 1,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
               zIndex: 10,
-              borderRadius: 1
+              borderRadius: '12px',
+              overflow: 'hidden'
             }}
           >
             <table className='min-w-full border-collapse'>
@@ -629,8 +656,8 @@
                       {col.columnName}
                       {/* Resize Handle */}
                       <div
-                        className='absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary z-50'
-                        onMouseDown={e => {
+                        className='absolute right-0 top-0 h-full w-3 cursor-col-resize hover:bg-primary/30 transition-colors z-50 touch-none after:content-[""] after:absolute after:right-0 after:top-0 after:w-[1px] after:h-full after:bg-divider group-hover:after:bg-primary'
+                        onPointerDown={e => {
                           const currentWidth = columnWidths[col.columnId] || col.width || 200
                           onColumnResizeStart(e, col.columnId, currentWidth)
                         }}
@@ -1902,8 +1929,8 @@
         startX: e.clientX,
         startWidth: currentWidth || 150
       }
-      document.addEventListener('mousemove', handleColumnResizeMove)
-      document.addEventListener('mouseup', handleColumnResizeEnd)
+      document.addEventListener('pointermove', handleColumnResizeMove)
+      document.addEventListener('pointerup', handleColumnResizeEnd)
     }
 
     const handleColumnResizeMove = e => {
@@ -1936,8 +1963,8 @@
       }
 
       resizingRef.current = { isResizing: false, columnId: null, startX: 0, startWidth: 0 }
-      document.removeEventListener('mousemove', handleColumnResizeMove)
-      document.removeEventListener('mouseup', handleColumnResizeEnd)
+      document.removeEventListener('pointermove', handleColumnResizeMove)
+      document.removeEventListener('pointerup', handleColumnResizeEnd)
     }
 
     const toggleGroupCollapse = async groupId => {
@@ -2903,7 +2930,7 @@
       return (
         <tr
           ref={isMainHeader ? headerRef : null}
-          className={`bg-backgroundPaper border-b border-divider ${!isMainHeader ? 'bg-opacity-50' : ''}`}
+          className={`bg-backgroundPaper border-b border-divider ${!isMainHeader ? 'bg-opacity-40' : ''}`}
         >
           {visibleColumns?.map(column => {
             const isItemColumn = column.columnName.toLowerCase() === 'item' || column.columnId === 'item_title'
@@ -2912,7 +2939,7 @@
             return (
               <th
                 key={column.columnId}
-                className={`p-0 text-left text-sm font-semibold text-textPrimary whitespace-nowrap border-r border-divider sticky ${isMainHeader ? 'top-0' : ''} ${isItemColumn ? 'left-0 z-[60] border-r-2 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.1)]' : 'z-20'} bg-backgroundPaper ${isMainHeader ? 'table-column-draggable' : ''} group`}
+                className={`p-0 text-left text-[11px] uppercase tracking-wider font-bold text-textSecondary border-r border-divider sticky ${isMainHeader ? 'top-0' : ''} ${isItemColumn ? 'left-0 z-[60] shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : 'z-20'} bg-backgroundPaper ${isMainHeader ? 'table-column-draggable' : ''} group transition-colors hover:bg-actionHover/30`}
                 style={{ 
                   width: currentWidth, 
                   minWidth: currentWidth, 
@@ -2920,44 +2947,57 @@
                   backgroundColor: 'var(--mui-palette-background-paper)' 
                 }}
               >
-                <div className='flex items-center justify-between px-3 py-3 h-full gap-2'>
+                <div className='flex items-center justify-between px-4 py-2.5 h-full gap-2'>
                   {isMainHeader && isItemColumn && (
-                    <div className="flex items-center gap-1 mr-2 border-r border-gray-200 pr-2">
+                    <div className="flex items-center gap-1 mr-1">
                         <Checkbox
                           checked={isAllSelected}
                           indeterminate={isIndeterminate}
                           onChange={handleToggleSelectAll}
                           size='small'
-                          className='!p-1'
+                          className='!p-0 !mr-2 opacity-60 hover:opacity-100 transition-opacity'
                         />
+                        <div className="w-[1px] h-4 bg-divider mr-2"></div>
                     </div>
                   )}
 
-                  <span className='truncate flex items-center gap-2 flex-1'>
-                    {isMainHeader && !isItemColumn && <i className='tabler-arrows-move col-handle text-textSecondary cursor-grab' />}
-                    {column.columnName}
-                  </span>
-                  
-                  <IconButton
-                    size='small'
-                    onClick={e => openColumnMenu(e, column)}
-                    className='opacity-0 group-hover:opacity-100 transition-opacity'
-                  >
-                    <i className='tabler-dots-vertical' />
-                  </IconButton>
-                  {/* Resize Handle */}
+                  <div className='flex items-center gap-2 flex-1 min-w-0'>
+                    {isMainHeader && (
+                      <div className='col-handle cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-0.5 rounded hover:bg-actionHover -ml-1'>
+                        <i className='tabler-grip-vertical text-sm' />
+                      </div>
+                    )}
+                    <span className='truncate'>{column.columnName}</span>
+                  </div>
+
                   {isMainHeader && (
-                    <div
-                      className='absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary z-50'
-                      onMouseDown={e => handleColumnResizeStart(e, column.columnId, currentWidth)}
-                      onClick={e => e.stopPropagation()}
-                    />
+                    <div className='flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity'>
+                      {/* Search / Filter for specific column */}
+                      {['STATUS', 'PERSON', 'TEXT'].includes(column.columnType) && (
+                         <i className='tabler-search text-sm cursor-pointer hover:text-primary transition-colors' />
+                      )}
+                      
+                      <IconButton 
+                        size='small' 
+                        onClick={e => openColumnMenu(e, column)}
+                        className="!p-0.5"
+                      >
+                        <i className='tabler-chevron-down text-sm' />
+                      </IconButton>
+                    </div>
                   )}
                 </div>
+
+                {isMainHeader && (
+                  <div
+                    className='absolute top-0 right-0 w-3 h-full cursor-col-resize hover:bg-primary/30 transition-colors z-30 touch-none after:content-[""] after:absolute after:right-0 after:top-0 after:w-[1.5px] after:h-full after:bg-divider group-hover:after:bg-primary'
+                    onPointerDown={e => handleColumnResizeStart(e, column.columnId, currentWidth)}
+                  />
+                )}
               </th>
             )
           })}
-          <th className='w-12 border-r border-divider sticky top-0 z-20 bg-backgroundPaper'>
+          <th className='border-r border-divider w-full bg-backgroundPaper'>
             {isMainHeader && (
               <IconButton size='small' onClick={handleOpenAddColumnMenu}>
                 <i className='tabler-plus text-textSecondary' />
@@ -2997,13 +3037,13 @@
     return (
       <div className='relative'>
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-2'>
-          <div className='flex flex-wrap gap-2'>
+          <div className='flex flex-wrap gap-3'>
             <Button
               variant={filters.length > 0 ? 'contained' : 'outlined'}
               size='small'
               startIcon={<i className='tabler-filter' />}
               onClick={e => setFilterMenuAnchor(e.currentTarget)}
-              className={`!border-divider ${filters.length === 0 ? '!text-textSecondary' : ''}`}
+              className={`!rounded-full !px-4 !border-divider ${filters.length === 0 ? '!text-textSecondary !bg-transparent' : ''}`}
             >
               Filter {filters.length > 0 && `(${filters.length})`}
             </Button>
@@ -3012,11 +3052,11 @@
               size='small'
               startIcon={<i className='tabler-arrows-sort' />}
               onClick={e => setSortAnchor(e.currentTarget)}
-              className={`!border-divider ${!sortConfig.columnId ? '!text-textSecondary' : ''}`}
+              className={`!rounded-full !px-4 !border-divider ${!sortConfig.columnId ? '!text-textSecondary !bg-transparent' : ''}`}
             >
               Sort {sortConfig.columnId ? '/ 1 Rule' : ''}
             </Button>
-            </div>
+          </div>
 
 
           <div className='flex flex-wrap items-center gap-2 mt-1 sm:mt-0'>
@@ -3093,11 +3133,11 @@
                 <SortableGroup key={group.groupId} id={`group-${group.groupId}`}>
                   {(listeners, attributes) => (
                     <React.Fragment>
-                  <tr className='bg-backgroundPaper group'>
+                  <tr className='bg-backgroundPaper border-b border-divider group/row'>
                     <td
-                      className='p-2 font-bold text-textPrimary sticky left-0 z-[50] bg-backgroundPaper border-r-2 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.1)]'
+                      className='p-3 font-bold text-textPrimary sticky left-0 z-[50] bg-backgroundPaper border-r border-divider shadow-[2px_0_5px_rgba(0,0,0,0.05)]'
                       style={{
-                        borderLeft: `6px solid ${group.groupColor}`, 
+                        borderLeft: `5px solid ${group.groupColor}`,
                         width:
                           columnWidths[visibleColumns.find(c => c.columnName.toLowerCase() === 'item')?.columnId] ||
                           visibleColumns.find(c => c.columnName.toLowerCase() === 'item')?.width ||
@@ -3110,39 +3150,33 @@
                           columnWidths[visibleColumns.find(c => c.columnName.toLowerCase() === 'item')?.columnId] ||
                           visibleColumns.find(c => c.columnName.toLowerCase() === 'item')?.width ||
                           200,
-                        overflow: 'hidden',
                         backgroundColor: 'var(--mui-palette-background-paper)'
                       }}
                     >
-                      <div className='flex items-center gap-2'>
+                      <div className='flex items-center gap-3'>
                          <div
-                            className='cursor-grab active:cursor-grabbing text-textDisabled hover:text-textPrimary transition-colors flex items-center justify-center p-2 rounded hover:bg-actionHover -ml-2'
+                            className='cursor-grab active:cursor-grabbing text-textDisabled hover:text-textPrimary transition-colors flex items-center justify-center p-1.5 rounded hover:bg-actionHover -ml-1'
                             {...listeners}
                             {...attributes}
                          >
                              <i className='tabler-grip-vertical text-xl' />
                          </div>
-                        <IconButton
-                          size='small'
-                          className='opacity-0 group-hover:opacity-100 transition-opacity -ml-1'
-                          onClick={e => setMenuAnchor({ anchorEl: e.currentTarget, type: 'group', id: group.groupId })}
-                        >
-                          <i className='tabler-dots-vertical text-base' />
-                        </IconButton>
-
+                        
                         <IconButton
                           size='small'
                           onClick={() => toggleGroupCollapse(group.groupId)}
                           sx={{
                             color: group.groupColor,
                             transform: collapsedGroups.includes(group.groupId) ? 'rotate(-90deg)' : 'rotate(0deg)',
-                            transition: 'transform 0.2s',
-                            padding: 0
+                            transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            bgcolor: hexToRGBA(group.groupColor, 0.1),
+                            '&:hover': { bgcolor: hexToRGBA(group.groupColor, 0.2) },
+                            padding: 0.5
                           }}
                         >
-                          <i className='tabler-chevron-down' />
+                          <i className='tabler-chevron-down text-base' />
                         </IconButton>
-                        <div className="flex-1 font-semibold overflow-hidden">
+                        <div className="flex-1 overflow-hidden">
                           {editingGroupName?.groupId === group.groupId ? (
                             <TextField
                               autoFocus
@@ -3154,21 +3188,25 @@
                               onKeyDown={e =>
                                 e.key === 'Enter' && handleUpdateGroupName(group.groupId, editingGroupName.currentName)
                               }
-                              InputProps={{ disableUnderline: true, className: '!text-textPrimary !font-bold !text-base' }}
+                              InputProps={{ disableUnderline: true, className: '!text-textPrimary !font-bold !text-lg' }}
                             />
                           ) : (
                             <Typography
-                              variant='subtitle1'
+                              variant='h6'
                               onClick={() => setEditingGroupName({ groupId: group.groupId, currentName: group.groupName })}
-                              className='cursor-pointer truncate !font-bold !text-textPrimary'
+                              className='cursor-pointer truncate !font-bold !text-textPrimary tracking-tight'
                             >
                               {group.groupName}
                             </Typography>
                           )}
                         </div>
-                        <span className='text-xs text-textSecondary font-normal ml-2 whitespace-nowrap'>
-                          {collapsedGroups.includes(group.groupId) && `${group.items.length} Items`}
-                        </span>
+                         <IconButton
+                          size='small'
+                          className='opacity-100 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity'
+                          onClick={e => setMenuAnchor({ anchorEl: e.currentTarget, type: 'group', id: group.groupId })}
+                        >
+                          <i className='tabler-dots-vertical text-base' />
+                        </IconButton>
                       </div>
                     </td>
                     <td colSpan={visibleColumns.length - 1} className='border-r border-divider'></td>
@@ -3191,7 +3229,7 @@
                               key={item.taskId} 
                               item={item}
                               isSelected={isSelected}
-                              className={`group hover:bg-[var(--row-bg-hover)] transition-colors ${isSelected ? 'bg-[var(--row-bg-selected)]' : 'bg-[var(--row-bg-default)]'}`}
+                              className={`group hover:bg-[var(--row-bg-hover)] border-b border-divider transition-colors ${isSelected ? 'bg-[var(--row-bg-selected)]' : 'bg-[var(--row-bg-default)]'}`}
                               style={{
                                 '--row-bg-default': 'var(--mui-palette-background-paper)',
                                 '--row-bg-hover': hoverBg,
@@ -3216,8 +3254,8 @@
                               editingTextValue?.taskId === item.taskId && editingTextValue?.columnId === column.columnId
 
                             const stickyClass = isItemColumn 
-                              ? `sticky left-0 z-[45] shadow-[6px_0_18px_-4px_rgba(0,0,0,0.1)] clip-right ${isSelected ? 'bg-[var(--row-bg-selected)]' : 'bg-[var(--row-bg-default)]'} group-hover:bg-[var(--row-bg-hover)]`
-                              : ''
+                              ? `sticky left-0 z-[45] shadow-[2px_0_5px_rgba(0,0,0,0.05)] clip-right transition-all duration-200 ${isSelected ? 'bg-[var(--row-bg-selected)]' : 'bg-[var(--row-bg-default)]'} group-hover:bg-[var(--row-bg-hover)]`
+                              : 'transition-all duration-200'
                             
                             const stickyStyle = isItemColumn ? { 
                                 zIndex: 45, 
@@ -3476,17 +3514,19 @@
                   })}
                   <tr className='bg-backgroundPaper'>
                     <td
-                      className='p-2 text-textSecondary border-r border-divider sticky left-0 z-[45] bg-backgroundPaper border-r-2 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.1)]'
+                      className='p-3 text-textSecondary border-r border-divider sticky left-0 z-[45] bg-backgroundPaper'
                       style={{
                         width:
                           columnWidths[visibleColumns.find(c => c.columnName.toLowerCase() === 'item')?.columnId] ||
                           visibleColumns.find(c => c.columnName.toLowerCase() === 'item')?.width ||
                           200,
                         backgroundColor: 'var(--mui-palette-background-paper)',
-                        zIndex: 45
+                        zIndex: 45,
+                        borderLeft: `5px solid transparent` 
                       }}
                     >
-                      <div className="pl-8"> 
+                      <div className="pl-10 flex items-center gap-2 group/add">
+                          <i className='tabler-plus text-textDisabled group-hover/add:text-primary transition-colors' />
                           {activeNewItemInput === group.groupId ? (
                           <TextField
                               fullWidth
@@ -3496,20 +3536,21 @@
                               onChange={e => setNewItemTitle(e.target.value)}
                               onBlur={() => handleCreateTask(group.groupId)}
                               onKeyDown={e => e.key === 'Enter' && handleCreateTask(group.groupId)}
-                              placeholder='+ Add Item'
-                              InputProps={{ disableUnderline: true }}
+                              placeholder='Type item name and press Enter...'
+                              InputProps={{ disableUnderline: true, className: '!text-textPrimary !text-sm' }}
                           />
                           ) : (
-                          <button
+                          <Typography
+                              variant='body2'
+                              className='cursor-text text-textDisabled hover:text-textSecondary transition-colors py-1'
                               onClick={() => setActiveNewItemInput(group.groupId)}
-                              className='flex items-center w-full text-left'
                           >
-                              <i className='tabler-plus mr-2' />+ Add Item
-                          </button>
+                              Add Item
+                          </Typography>
                           )}
                       </div>
                     </td>
-                    <td colSpan={visibleColumns.length} className='border-r border-divider'></td>
+                    <td colSpan={visibleColumns.length} className='border-r border-divider border-b'></td>
                   </tr>
                   <tr className='bg-backgroundPaper border-t border-gray-700'>
                     {visibleColumns.map(column => {

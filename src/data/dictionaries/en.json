@@ -32,6 +32,7 @@
         "chat": "Chat",
         "calendar": "Calendar",
         "kanban": "Kanban",
+        "tablesOverview": "Tables Overview",
         "invoice": "Invoice",
         "preview": "Preview",
         "edit": "Edit",

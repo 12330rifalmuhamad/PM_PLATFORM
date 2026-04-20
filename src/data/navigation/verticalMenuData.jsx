@@ -207,6 +207,11 @@ const verticalMenuData = dictionary => [
         href: '/project-management'
       },
       {
+        label: dictionary['navigation'].tablesOverview,
+        icon: 'tabler-layout-table',
+        href: '/apps/tables-overview'
+      },
+      {
         label: dictionary['navigation'].invoice,
         icon: 'tabler-file-description',
         children: [
