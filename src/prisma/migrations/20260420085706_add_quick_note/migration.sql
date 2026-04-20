@@ -117,22 +117,50 @@ CREATE TABLE IF NOT EXISTS "trInternalMessage" (
 CREATE UNIQUE INDEX IF NOT EXISTS "trChatParticipant_intChatRoom_ID_intUser_ID_key" ON "trChatParticipant"("intChatRoom_ID", "intUser_ID");
 
 -- AddForeignKey
-ALTER TABLE "trDashboardWidget" ADD CONSTRAINT "trDashboardWidget_intBoard_ID_fkey" FOREIGN KEY ("intBoard_ID") REFERENCES "mBoard"("intBoard_ID") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'trDashboardWidget_intBoard_ID_fkey') THEN
+        ALTER TABLE "trDashboardWidget" ADD CONSTRAINT "trDashboardWidget_intBoard_ID_fkey" FOREIGN KEY ("intBoard_ID") REFERENCES "mBoard"("intBoard_ID") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "trChatParticipant" ADD CONSTRAINT "trChatParticipant_intChatRoom_ID_fkey" FOREIGN KEY ("intChatRoom_ID") REFERENCES "trChatRoom"("intChatRoom_ID") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'trChatParticipant_intChatRoom_ID_fkey') THEN
+        ALTER TABLE "trChatParticipant" ADD CONSTRAINT "trChatParticipant_intChatRoom_ID_fkey" FOREIGN KEY ("intChatRoom_ID") REFERENCES "trChatRoom"("intChatRoom_ID") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "trChatParticipant" ADD CONSTRAINT "trChatParticipant_intUser_ID_fkey" FOREIGN KEY ("intUser_ID") REFERENCES "mUser"("intUser_ID") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'trChatParticipant_intUser_ID_fkey') THEN
+        ALTER TABLE "trChatParticipant" ADD CONSTRAINT "trChatParticipant_intUser_ID_fkey" FOREIGN KEY ("intUser_ID") REFERENCES "mUser"("intUser_ID") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "trChatMessage" ADD CONSTRAINT "trChatMessage_intChatRoom_ID_fkey" FOREIGN KEY ("intChatRoom_ID") REFERENCES "trChatRoom"("intChatRoom_ID") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'trChatMessage_intChatRoom_ID_fkey') THEN
+        ALTER TABLE "trChatMessage" ADD CONSTRAINT "trChatMessage_intChatRoom_ID_fkey" FOREIGN KEY ("intChatRoom_ID") REFERENCES "trChatRoom"("intChatRoom_ID") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "trChatMessage" ADD CONSTRAINT "trChatMessage_intSender_ID_fkey" FOREIGN KEY ("intSender_ID") REFERENCES "mUser"("intUser_ID") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'trChatMessage_intSender_ID_fkey') THEN
+        ALTER TABLE "trChatMessage" ADD CONSTRAINT "trChatMessage_intSender_ID_fkey" FOREIGN KEY ("intSender_ID") REFERENCES "mUser"("intUser_ID") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "trInternalMessage" ADD CONSTRAINT "trInternalMessage_intSender_ID_fkey" FOREIGN KEY ("intSender_ID") REFERENCES "mUser"("intUser_ID") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'trInternalMessage_intSender_ID_fkey') THEN
+        ALTER TABLE "trInternalMessage" ADD CONSTRAINT "trInternalMessage_intSender_ID_fkey" FOREIGN KEY ("intSender_ID") REFERENCES "mUser"("intUser_ID") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "trInternalMessage" ADD CONSTRAINT "trInternalMessage_intRecipient_ID_fkey" FOREIGN KEY ("intRecipient_ID") REFERENCES "mUser"("intUser_ID") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'trInternalMessage_intRecipient_ID_fkey') THEN
+        ALTER TABLE "trInternalMessage" ADD CONSTRAINT "trInternalMessage_intRecipient_ID_fkey" FOREIGN KEY ("intRecipient_ID") REFERENCES "mUser"("intUser_ID") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
