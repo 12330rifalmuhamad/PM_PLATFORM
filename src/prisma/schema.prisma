@@ -108,6 +108,8 @@ model DashboardWidget {
   height        Int?      @default(400) @map("intHeight")
   x             Int?      @default(0) @map("intX")
   y             Int?      @default(0) @map("intY")
+  filterGroupId BigInt?   @map("intFilterGroup_ID")
+  settings      Json?     @map("txtSettings")
   
   dtmInserted   DateTime  @default(now()) @map("dtmInserted")
   txtInsertedBy String?   @map("txtInsertedBy")

@@ -22,7 +22,7 @@ export async function POST(request, { params }) {
     if (!isMember) return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
 
     const body = await request.json()
-    const { title, chartType, groupByColumn, metricColumn, aggregation, width, height, x, y } = body
+    const { title, chartType, groupByColumn, metricColumn, aggregation, width, height, x, y, filterGroupId, settings } = body
 
     if (!title || !chartType) {
         return NextResponse.json({ message: 'Missing required fields' }, { status: 400 })
@@ -40,6 +40,8 @@ export async function POST(request, { params }) {
             height,
             x: x || 0,
             y: y || 0,
+            filterGroupId: filterGroupId ? BigInt(filterGroupId) : null,
+            settings: settings || null,
             txtInsertedBy: session.user.name
         }
     })

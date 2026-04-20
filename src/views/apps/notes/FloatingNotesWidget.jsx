@@ -153,6 +153,7 @@ const FloatingNotesWidget = () => {
   const [activeNote, setActiveNote] = useState(null)
   const [newNoteContent, setNewNoteContent] = useState('')
   const [isInkMode, setIsInkMode] = useState(false)
+  const [editingNoteId, setEditingNoteId] = useState(null)
 
   // Hooks
   const theme = useTheme()
@@ -175,22 +176,44 @@ const FloatingNotesWidget = () => {
 
   const handleToggle = () => setIsOpen((prev) => !prev)
 
-  const handleAddNote = async () => {
+  const handleSaveNote = async () => {
     if (!newNoteContent.trim()) return
     
     try {
-      const result = await dispatch(saveNote({ 
+      const payload = { 
         content: newNoteContent, 
         color: '#ffffd1',
-        title: '' // Could be added to UI later
-      })).unwrap()
+        title: '' 
+      }
+
+      if (editingNoteId) {
+        payload.noteId = editingNoteId
+      }
+
+      const result = await dispatch(saveNote(payload)).unwrap()
       
-      toast.success('Note saved successfully!')
+      toast.success(editingNoteId ? 'Note updated successfully!' : 'Note saved successfully!')
       setNewNoteContent('')
+      setEditingNoteId(null)
       if (isFullScreen) setActiveNote(result)
     } catch (err) {
       // Rejection handled by useEffect watching error state
     }
+  }
+
+  const handleEditNote = (note) => {
+    if (isInkNote(note.content)) {
+      toast.info('Handwritten notes can be deleted and recreated, but not edited as text.')
+      return
+    }
+    setEditingNoteId(note.noteId)
+    setNewNoteContent(note.content)
+    setIsInkMode(false)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingNoteId(null)
+    setNewNoteContent('')
   }
 
   const handleSaveInk = async (dataUrl) => {
@@ -326,6 +349,11 @@ const FloatingNotesWidget = () => {
                             )}
                             </CardContent>
                             <CardActions sx={{ justifyContent: 'flex-end', p: 1, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                            {!isInkNote(note.content) && (
+                                <IconButton size='small' onClick={(e) => { e.stopPropagation(); handleEditNote(note); }}>
+                                    <i className='tabler-edit' style={{ fontSize: 18, color: 'rgba(0,0,0,0.5)' }} />
+                                </IconButton>
+                            )}
                             <IconButton size='small' onClick={(e) => { e.stopPropagation(); handleTogglePin(note); }}>
                                 <i className={note.isPinned ? 'tabler-pin' : 'tabler-pin-filled'} style={{ fontSize: 18, color: 'rgba(0,0,0,0.5)' }} />
                             </IconButton>
@@ -355,9 +383,14 @@ const FloatingNotesWidget = () => {
                                 InputProps={{ disableUnderline: true, style: { fontSize: '1rem' } }}
                                 disabled={loading}
                                 />
-                                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                                <IconButton color='primary' onClick={handleAddNote} disabled={!newNoteContent.trim() || loading}>
-                                    <i className={loading ? 'tabler-loader animate-spin' : 'tabler-send'} />
+                                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                                {editingNoteId && (
+                                    <IconButton size='small' onClick={handleCancelEdit}>
+                                        <i className='tabler-x' />
+                                    </IconButton>
+                                )}
+                                <IconButton color='primary' onClick={handleSaveNote} disabled={!newNoteContent.trim() || loading}>
+                                    <i className={loading ? 'tabler-loader animate-spin' : (editingNoteId ? 'tabler-check' : 'tabler-send')} />
                                 </IconButton>
                                 </Box>
                             </>
@@ -413,22 +446,24 @@ const FloatingNotesWidget = () => {
                                         InputProps={{ style: { fontSize: '1.25rem', padding: 0 } }}
                                         disabled={loading}
                                     />
-                                    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 3 }}>
-                                        <Button 
-                                            variant='tonal' 
-                                            color='secondary' 
-                                            onClick={() => setNewNoteContent('')}
-                                            disabled={loading}
-                                        >
-                                            Clear
-                                        </Button>
+                                     <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 3 }}>
+                                        {(newNoteContent.trim() || editingNoteId) && (
+                                            <Button 
+                                                variant='tonal' 
+                                                color='secondary' 
+                                                onClick={handleCancelEdit}
+                                                disabled={loading}
+                                            >
+                                                {editingNoteId ? 'Cancel Edit' : 'Clear'}
+                                            </Button>
+                                        )}
                                         <Button 
                                             variant='contained' 
-                                            startIcon={loading ? <CircularProgress size={20} color='inherit' /> : <i className='tabler-save' />}
-                                            onClick={handleAddNote}
+                                            startIcon={loading ? <CircularProgress size={20} color='inherit' /> : <i className={editingNoteId ? 'tabler-check' : 'tabler-save'} />}
+                                            onClick={handleSaveNote}
                                             disabled={!newNoteContent.trim() || loading}
                                         >
-                                            Save Note
+                                            {editingNoteId ? 'Update Note' : 'Save Note'}
                                         </Button>
                                     </Box>
                                 </>

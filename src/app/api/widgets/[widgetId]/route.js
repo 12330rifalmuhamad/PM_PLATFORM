@@ -15,7 +15,7 @@ export async function PUT(request, { params }) {
 
   try {
     const body = await request.json()
-    const { title, chartType, groupByColumn, metricColumn, aggregation, width, height, x, y } = body
+    const { title, chartType, groupByColumn, metricColumn, aggregation, width, height, x, y, filterGroupId, settings } = body
 
     // Verify ownership via board membership (indirectly)
     // First get the widget to find the boardId
@@ -43,6 +43,8 @@ export async function PUT(request, { params }) {
             height,
             x: x !== undefined ? x : existingWidget.x,
             y: y !== undefined ? y : existingWidget.y,
+            filterGroupId: filterGroupId !== undefined ? (filterGroupId ? BigInt(filterGroupId) : null) : existingWidget.filterGroupId,
+            settings: settings !== undefined ? settings : existingWidget.settings,
             txtUpdatedBy: session.user.name
         }
     })

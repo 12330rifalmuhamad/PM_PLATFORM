@@ -36,7 +36,8 @@ const CHART_TYPES = [
   { type: 'pie', label: 'Pie Chart', icon: 'tabler-chart-pie' },
   { type: 'donut', label: 'Donut Chart', icon: 'tabler-chart-donut' },
   { type: 'radar', label: 'Radar Chart', icon: 'tabler-chart-radar' },
-  { type: 'scatter', label: 'Scatter Plot', icon: 'tabler-chart-dots' }
+  { type: 'scatter', label: 'Scatter Plot', icon: 'tabler-chart-dots' },
+  { type: 'summary', label: 'Summary List', icon: 'tabler-list-numbers' }
 ]
 
 const AGGREGATIONS = [
@@ -56,6 +57,7 @@ const DashboardView = ({ board, searchQuery }) => {
   
   // Widget Editing State
   const [editingWidgetId, setEditingWidgetId] = useState(null)
+  const [loading, setLoading] = useState(false)
   const [currentWidgetConfig, setCurrentWidgetConfig] = useState({
     title: '',
     chartType: 'bar',
@@ -63,13 +65,28 @@ const DashboardView = ({ board, searchQuery }) => {
     metricColumn: '', // Y-Axis (for aggregations)
     aggregation: 'count',
     width: 6,
-    height: 400 
+    height: 400,
+    filterGroupId: '',
+    settings: {
+        metrics: [], // Array of columnIds
+        yAxisMin: null,
+        yAxisMax: null,
+        yAxisAuto: true,
+        showSecondaryAxis: false,
+        secondaryMetrics: [] // Which metrics go to the right axis
+    }
   })
 
   // Normalize/Flatten items
   const allItems = useMemo(() => {
     if (!board || !board.groups) return []
-    const items = board.groups.flatMap(g => g.items || [])
+    const items = board.groups.flatMap(g => 
+      (g.items || []).map(item => ({
+        ...item, 
+        groupId: String(g.groupId), 
+        groupName: g.groupName
+      }))
+    )
     
     if (!searchQuery) return items
     
@@ -82,9 +99,22 @@ const DashboardView = ({ board, searchQuery }) => {
 
 
   const handleOpenDialog = (widgetToEdit = null) => {
+    const defaultSettings = {
+        metrics: [],
+        breakdownColumnId: '',
+        yAxisMin: null,
+        yAxisMax: null,
+        yAxisAuto: true,
+        showSecondaryAxis: false,
+        secondaryMetrics: []
+    }
+
     if (widgetToEdit) {
       setEditingWidgetId(widgetToEdit.widgetId)
-      setCurrentWidgetConfig({ ...widgetToEdit })
+      setCurrentWidgetConfig({ 
+          ...widgetToEdit, 
+          settings: { ...defaultSettings, ...(widgetToEdit.settings || {}) } 
+      })
     } else {
       setEditingWidgetId(null)
       setCurrentWidgetConfig({
@@ -94,7 +124,9 @@ const DashboardView = ({ board, searchQuery }) => {
         metricColumn: '',
         aggregation: 'count',
         width: 6,
-        height: 400
+        height: 400,
+        filterGroupId: '',
+        settings: defaultSettings
       })
     }
     setIsDialogOpen(true)
@@ -105,45 +137,41 @@ const DashboardView = ({ board, searchQuery }) => {
   // Use widgets from board data instead of local state
   const widgets = board?.widgets || []
 
-  const handleSaveWidget = async () => {
+   const handleSaveWidget = async () => {
     if (!board || !board.boardId) {
       console.error('Board data missing')
       return
     }
     
-    let optimisticData = []
-    
-    // Optimistic Update
-    if (editingWidgetId) {
-      optimisticData = widgets.map(w => w.widgetId === editingWidgetId ? { ...currentWidgetConfig, widgetId: editingWidgetId } : w)
-    } else {
-      optimisticData = [...widgets, { ...currentWidgetConfig, widgetId: 'temp-' + Date.now() }]
-    }
-    
-    // We can't easily do optimistic updates for Create because we need real ID
-    // So we just rely on loading state or SWR mutation
-    setIsDialogOpen(false)
-
+    setLoading(true)
     try {
+        const payload = {
+            ...currentWidgetConfig,
+            // Ensure BigInt-like IDs are strings for JSON compatibility
+            boardId: String(board.boardId),
+            filterGroupId: currentWidgetConfig.filterGroupId ? String(currentWidgetConfig.filterGroupId) : null
+        }
+
         if (editingWidgetId) {
-            // UPDATE
             await fetch(`/api/widgets/${editingWidgetId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(currentWidgetConfig)
+                body: JSON.stringify(payload)
             })
         } else {
-            // CREATE
             await fetch(`/api/boards/${board.boardId}/widgets`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(currentWidgetConfig)
+                body: JSON.stringify(payload)
             })
         }
         mutate(`/api/boards/${board.boardId}`)
+        setIsDialogOpen(false)
     } catch (error) {
         console.error('Failed to save widget', error)
-        alert('Failed to save widget')
+        alert('Failed to save widget. Please try again.')
+    } finally {
+        setLoading(false)
     }
   }
 
@@ -209,89 +237,193 @@ const DashboardView = ({ board, searchQuery }) => {
 
   /* Live Preview & Enhanced Configuration Logic */
 
-  const getChartOption = (widget, isPreview = false) => {
-    const { chartType, groupByColumn, metricColumn, aggregation, title, dateGrouping, sortBy } = widget
+  const processWidgetData = (widget) => {
+    const { groupByColumn, aggregation, dateGrouping, sortBy } = widget
+    const breakdownColumnId = widget.settings?.breakdownColumnId
 
-    // 1. Bucketing Data
-    const buckets = {} 
+    // 1. Bucketing Data (Two-Level: Primary -> Breakdown)
+    const buckets = {} // { label: { breakdownVal: [items] } }
+    const breakdownLabels = new Set()
     
-    // Helper to get formatted key
-    const getKey = (item) => {
-         let key = 'Unassigned'
-         if (!groupByColumn) return key
+    const getLabel = (item, colId) => {
+          let key = 'Unassigned'
+          if (!colId) return key
 
-         // Special handling for Status (often text)
-         if (groupByColumn === 'status') {
-             const valObj = item.values?.find(v => normalizeId(v.columnId) === normalizeId(groupByColumn))
-             if (valObj && valObj.value) key = valObj.value
-             return key
-         }
+          if (colId === 'group') return item.groupName || 'No Group'
 
-         // Column lookup
-         const colDef = columns.find(c => c.columnId === groupByColumn)
-         const valObj = item.values?.find(v => normalizeId(v.columnId) === normalizeId(groupByColumn))
-         
-         if (!valObj || !valObj.value) return key
-         
-         // Date Handling
-         if (colDef && colDef.columnType === 'date') {
-             try {
-                 const date = parseISO(valObj.value)
-                 if (isValid(date)) {
-                     if (dateGrouping === 'day') return format(date, 'MMM dd, yyyy')
-                     if (dateGrouping === 'week') return `Week ${format(date, 'ww, yyyy')}`
-                     if (dateGrouping === 'month') return format(date, 'MMM yyyy')
-                     if (dateGrouping === 'year') return format(date, 'yyyy')
-                     return format(date, 'MMM dd, yyyy') // default
-                 }
-             } catch (e) {
-                 return 'Invalid Date'
-             }
-         }
-         
-         return (valObj.value === null || valObj.value === undefined || valObj.value === '') ? 'Unassigned' : valObj.value
+          if (colId === 'status') {
+              const valObj = item.values?.find(v => normalizeId(v.columnId) === normalizeId(colId))
+              if (valObj && valObj.value) key = valObj.value
+              return key
+          }
+
+          const colDef = columns.find(c => c.columnId === colId)
+          const valObj = item.values?.find(v => normalizeId(v.columnId) === normalizeId(colId))
+          
+          if (!valObj || !valObj.value) return key
+          
+          if (colDef && colDef.columnType === 'date') {
+              try {
+                  const date = parseISO(valObj.value)
+                  if (isValid(date)) {
+                      if (dateGrouping === 'day') return format(date, 'MMM dd, yyyy')
+                      if (dateGrouping === 'week') return `Week ${format(date, 'ww, yyyy')}`
+                      if (dateGrouping === 'month') return format(date, 'MMM yyyy')
+                      if (dateGrouping === 'year') return format(date, 'yyyy')
+                      return format(date, 'MMM dd, yyyy') // default
+                  }
+              } catch (e) {
+                  return 'Invalid Date'
+              }
+          }
+          
+          return (valObj.value === null || valObj.value === undefined || valObj.value === '') ? 'Unassigned' : valObj.value
     }
 
-    allItems.forEach(item => {
-      const key = getKey(item)
-      if (!buckets[key]) buckets[key] = []
-      buckets[key].push(item)
+    const filteredItems = widget.filterGroupId 
+      ? allItems.filter(item => String(item.groupId) === String(widget.filterGroupId))
+      : allItems
+
+    filteredItems.forEach(item => {
+      const primaryKey = getLabel(item, groupByColumn)
+      const secondaryKey = breakdownColumnId ? getLabel(item, breakdownColumnId) : '_none_'
+      
+      if (!buckets[primaryKey]) buckets[primaryKey] = {}
+      if (!buckets[primaryKey][secondaryKey]) buckets[primaryKey][secondaryKey] = []
+      buckets[primaryKey][secondaryKey].push(item)
+      
+      if (secondaryKey !== '_none_') breakdownLabels.add(secondaryKey)
     })
 
-    // 2. Aggregating Data & Prepare for Sorting
-    let chartData = Object.keys(buckets).map(label => {
-      const itemsInBucket = buckets[label]
-      let value = 0
+    // 2. Aggregating Data
+    let selectedMetrics = widget.settings?.metrics || []
+    if (selectedMetrics.length === 0 && widget.metricColumn) selectedMetrics = [widget.metricColumn]
+    
+    // Ensure 'count' aggregation works even when no metric columns are selected
+    if (aggregation === 'count' && selectedMetrics.length === 0) {
+        selectedMetrics = ['_count_']
+    }
+    
+    const primaryLabels = Object.keys(buckets)
+    const finalSeries = []
 
-      if (aggregation === 'count') {
-        value = itemsInBucket.length
-      } else {
-        // Numeric Aggregations
-        if (!metricColumn) value = 0 
-        else {
-            const values = itemsInBucket.map(i => getNumericValue(i, metricColumn))
-            if (aggregation === 'sum') value = values.reduce((a, b) => a + b, 0)
-            else if (aggregation === 'max') value = Math.max(...values, 0)
-            else if (aggregation === 'min') value = Math.min(...values, 0)
-            else if (aggregation === 'avg') {
-                const sum = values.reduce((a, b) => a + b, 0)
-                value = values.length ? parseFloat((sum / values.length).toFixed(2)) : 0
+    // If no breakdown, use standard metric-based series
+    if (!breakdownColumnId || breakdownLabels.size === 0) {
+        selectedMetrics.forEach(metricId => {
+            let metricName = 'Jumlah Data' // Default label for count
+            if (metricId !== '_count_') {
+                 const colDef = columns.find(c => c.columnId === metricId)
+                 metricName = colDef ? (colDef.columnName || 'Untitled') : 'Unknown'
             }
+            
+            const data = primaryLabels.map(label => {
+                const itemsInBucket = buckets[label]['_none_'] || []
+                let value = 0
+                
+                if (aggregation === 'count') {
+                    value = itemsInBucket.length
+                } else {
+                    const values = itemsInBucket.map(i => getNumericValue(i, metricId))
+                    if (aggregation === 'sum') value = values.reduce((a, b) => a + b, 0)
+                    else if (aggregation === 'max') value = Math.max(...values, 0)
+                    else if (aggregation === 'min') value = Math.min(...values, 0)
+                    else if (aggregation === 'avg') {
+                        const sum = values.reduce((a, b) => a + b, 0)
+                        value = values.length ? parseFloat((sum / values.length).toFixed(2)) : 0
+                    }
+                }
+                return value
+            })
+            
+            finalSeries.push({ metricId, name: metricName, metricName, data })
+        })
+    } else {
+        // Multi-Group logic: One series for each unique breakdown label
+        // Usually focus on the first selected metric if multiple are present with breakdown
+        const metricId = selectedMetrics.length > 0 ? selectedMetrics[0] : '_count_'
+        let metricBaseName = 'Jumlah Data'
+        if (metricId !== '_count_') {
+            const colDef = columns.find(c => c.columnId === metricId)
+            metricBaseName = colDef ? (colDef.columnName || '') : ''
         }
-      }
-      return { label, value }
+        
+        const sortedBreakdownLabels = Array.from(breakdownLabels).sort()
+
+        sortedBreakdownLabels.forEach(bLabel => {
+            const data = primaryLabels.map(pLabel => {
+                const itemsInBucket = buckets[pLabel][bLabel] || []
+                let value = 0
+                
+                if (aggregation === 'count') {
+                    value = itemsInBucket.length
+                } else {
+                    const values = itemsInBucket.map(i => getNumericValue(i, metricId))
+                    if (aggregation === 'sum') value = values.reduce((a, b) => a + b, 0)
+                    else if (aggregation === 'max') value = Math.max(...values, 0)
+                    else if (aggregation === 'min') value = Math.min(...values, 0)
+                    else if (aggregation === 'avg') {
+                        const sum = values.reduce((a, b) => a + b, 0)
+                        value = values.length ? parseFloat((sum / values.length).toFixed(2)) : 0
+                    }
+                }
+                return value
+            })
+            
+            finalSeries.push({ 
+                metricId, 
+                name: bLabel, // Use breakdown label as series name
+                breakdownValue: bLabel,
+                metricName: metricBaseName,
+                data 
+            })
+        })
+    }
+
+    // 3. Sorting (based on X-axis labels)
+    const sortData = primaryLabels.map((label, index) => {
+        const firstVal = finalSeries.length > 0 ? finalSeries[0].data[index] : 0
+        return { label, index, firstVal }
     })
 
-    // 3. Sorting
-    if (sortBy === 'value_desc') chartData.sort((a, b) => b.value - a.value)
-    else if (sortBy === 'value_asc') chartData.sort((a, b) => a.value - b.value)
-    else if (sortBy === 'label_asc') chartData.sort((a, b) => a.label.localeCompare(b.label))
-    else if (sortBy === 'label_desc') chartData.sort((a, b) => b.label.localeCompare(a.label))
+    if (sortBy === 'value_desc') sortData.sort((a, b) => b.firstVal - a.firstVal)
+    else if (sortBy === 'value_asc') sortData.sort((a, b) => a.firstVal - b.firstVal)
+    else if (sortBy === 'label_asc') sortData.sort((a, b) => a.label.localeCompare(b.label))
+    else if (sortBy === 'label_desc') sortData.sort((a, b) => b.label.localeCompare(a.label))
+    else if (groupByColumn === 'group' && board?.groups) {
+        const groupOrder = board.groups.map(g => g.groupName)
+        sortData.sort((a, b) => groupOrder.indexOf(a.label) - groupOrder.indexOf(b.label))
+    }
 
-    const labels = chartData.map(d => d.label)
-    const dataValues = chartData.map(d => d.value)
+    const sortedLabels = sortData.map(d => d.label)
+    const sortedSeries = finalSeries.map(s => ({
+        ...s,
+        data: sortData.map(d => s.data[d.index])
+    }))
 
-    // 4. Construct ECharts Option
+    const totals = sortedSeries.map(s => s.data.reduce((a, b) => a + b, 0))
+
+    return { labels: sortedLabels, series: sortedSeries, totals, isBreakdown: !!breakdownColumnId }
+  }
+
+  const getChartOption = (widget, isPreview = false) => {
+    const { chartType, title, settings } = widget
+    const { labels, series } = processWidgetData(widget)
+    
+    // Formatting Helpers
+    const getFormatter = (metricId) => {
+        if (metricId === '_count_') return (val) => new Intl.NumberFormat('id-ID').format(val)
+        
+        const colDef = columns.find(c => c.columnId === metricId)
+        const isCurrency = colDef?.columnType === 'currency' || colDef?.columnName?.toLowerCase().includes('pemasukan') || colDef?.columnName?.toLowerCase().includes('nominal')
+        
+        if (isCurrency) {
+            return (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val)
+        }
+        
+        // Standard number formatting for everything else
+        return (val) => new Intl.NumberFormat('id-ID').format(val)
+    }
+
     const activeColors = [
       theme.palette.primary.main,
       theme.palette.success.main,
@@ -305,49 +437,228 @@ const DashboardView = ({ board, searchQuery }) => {
     
     const option = {
       backgroundColor: 'transparent',
-      title: { text: isPreview ? undefined : title, left: 'center', textStyle: { fontSize: 16 } }, // Hide title in preview to save space or avoid redundancy
-      tooltip: { trigger: 'item' },
+      title: { text: isPreview ? undefined : title, left: 'center', textStyle: { fontSize: 16 } }, 
+      tooltip: { 
+          trigger: ['pie', 'donut', 'radar'].includes(chartType) ? 'item' : 'axis',
+          formatter: (params) => {
+              if (['pie', 'donut'].includes(chartType)) {
+                  // For pie, params is an object
+                  const mId = params.data?.metricId || series[0]?.metricId || '_count_'
+                  return `${params.marker} ${params.name}: <b>${getFormatter(mId)(params.value)}</b>`
+              }
+              if (chartType === 'radar') {
+                  let res = `${params.marker} <b>${params.name}</b><br/>`
+                  const sInfo = series.find(s => (s.name || s.metricName) === params.name) || series[0]
+                  const formatter = getFormatter(sInfo?.metricId || '_count_')
+                  if (Array.isArray(params.value)) {
+                      params.value.forEach((val, idx) => {
+                          res += `${labels[idx]}: <b>${formatter(val)}</b><br/>`
+                      })
+                  }
+                  return res
+              }
+              // For axis trigger (bar, line, area), params is array
+              let res = `${params[0].name}<br/>`
+              params.forEach(p => {
+                  const sInfo = series[p.seriesIndex]
+                  if (!sInfo) return
+                  const formatter = getFormatter(sInfo.metricId)
+                  res += `${p.marker} ${p.seriesName}: <b>${formatter(p.value)}</b><br/>`
+              })
+              return res
+          }
+      },
       legend: { bottom: 0, type: 'scroll' },
       color: activeColors,
-      grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+      // Removed grid from default option (it will be added only for cartesian charts)
     }
 
     if (['pie', 'donut', 'radar'].includes(chartType)) {
       if (chartType === 'radar') {
-         option.radar = { indicator: labels.map(l => ({ name: l })) }
+         option.radar = { indicator: labels.map(l => ({ name: String(l) || 'Unknown' })) }
          option.series = [{
              type: 'radar',
-             data: [{ value: dataValues, name: title }]
+             data: series.map(s => ({
+                 value: s.data,
+                 name: s.name || s.metricName
+             }))
          }]
       } else {
+        // Flatten series for Pie/Donut to support multi-group/breakdown
+        const pieData = labels.flatMap((l, i) => 
+            series.map(s => ({
+                value: s.data[i] || 0,
+                name: series.length > 1 ? `${l} - ${s.name || s.metricName}` : l,
+                metricId: s.metricId
+            }))
+        ).filter(d => d.value > 0) // Hide zero values for cleaner pie
+        
         option.series = [{
             name: title,
             type: 'pie',
             radius: chartType === 'donut' ? ['40%', '70%'] : '50%',
-            data: chartData.map(d => ({ value: d.value, name: d.label })),
+            data: pieData,
             emphasis: {
                 itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)' }
             }
         }]
       }
     } else {
-      // Cartesian Charts
+      // Cartesian Charts Configuration (Bar, Line, Area)
+      option.grid = { left: '3%', right: '4%', bottom: '15%', containLabel: true }
+      
+      const yAxisBase = {
+          type: 'value',
+          min: settings?.yAxisAuto ? undefined : (settings?.yAxisMin || undefined),
+          max: settings?.yAxisAuto ? undefined : (settings?.yAxisMax || undefined),
+          axisLabel: {
+              formatter: (val) => {
+                  if (series && series.length > 0 && series[0]) return getFormatter(series[0].metricId)(val)
+                  return val
+              }
+          }
+      }
+
+      if (settings?.showSecondaryAxis) {
+          option.yAxis = [
+              { ...yAxisBase },
+              { 
+                  type: 'value', 
+                  name: 'Secondary',
+                  axisLabel: {
+                      formatter: (val) => {
+                          const secId = settings.secondaryMetrics?.[0]
+                          if (secId) return getFormatter(secId)(val)
+                          return val
+                      }
+                  }
+              }
+          ]
+      } else {
+          option.yAxis = yAxisBase
+      }
+
       option.xAxis = { 
           type: 'category', 
           data: labels,
           axisLabel: { interval: 0, rotate: labels.length > 5 ? 30 : 0 }
       }
-      option.yAxis = { type: 'value' }
-      option.series = [{
-          data: dataValues,
-          type: chartType === 'area' ? 'line' : chartType,
-          areaStyle: chartType === 'area' ? { opacity: 0.3 } : undefined,
-          smooth: true,
-          itemStyle: { borderRadius: chartType === 'bar' ? [4, 4, 0, 0] : 0 }
-      }]
+      option.series = series.map(s => {
+          const isSecondary = settings?.secondaryMetrics?.includes(s.metricId)
+          return {
+              name: s.name || s.metricName,
+              data: s.data,
+              type: chartType === 'area' ? 'line' : chartType,
+              yAxisIndex: isSecondary ? 1 : 0,
+              areaStyle: chartType === 'area' ? { opacity: 0.3 } : undefined,
+              smooth: true,
+              itemStyle: { borderRadius: chartType === 'bar' ? [4, 4, 0, 0] : 0 }
+          }
+      })
     }
 
     return option
+  }
+
+  const SummaryWidget = ({ widget, isPreview = false }) => {
+    const { labels, series, totals } = processWidgetData(widget)
+    
+    // Find filtered group name
+    const filteredGroup = widget.filterGroupId ? board.groups?.find(g => String(g.groupId) === String(widget.filterGroupId)) : null
+
+    // Helper to find color of a label if it's a group
+    const getLabelColor = (label) => {
+        if (widget.groupByColumn !== 'group') return null
+        const group = board.groups?.find(g => g.groupName === label)
+        return group?.groupColor || null
+    }
+
+    const formatValue = (val, metricId) => {
+        if (metricId === '_count_') return new Intl.NumberFormat('id-ID').format(val)
+        
+        const colDef = columns.find(c => c.columnId === metricId)
+        const isCurrency = colDef?.columnType === 'currency' || colDef?.columnName?.toLowerCase().includes('pemasukan') || colDef?.columnName?.toLowerCase().includes('nominal')
+        
+        if (isCurrency) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val)
+        }
+        
+        return new Intl.NumberFormat('id-ID').format(val)
+    }
+
+    return (
+        <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {!isPreview && (
+                <>
+                    <Typography variant='h6' align='center' sx={{ mb: 1, fontWeight: 600 }}>
+                        {widget.title}
+                    </Typography>
+                    {filteredGroup && (
+                        <Typography variant='caption' align='center' display='block' sx={{ mb: 3, opacity: 0.7 }}>
+                           Filtered Group: {filteredGroup.groupName}
+                        </Typography>
+                    )}
+                </>
+            )}
+            
+            <Box sx={{ overflowX: 'auto', flexGrow: 1 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr>
+                            <th style={{ textAlign: 'left', padding: '8px', opacity: 0.5 }}>
+                                <Typography variant='overline'>
+                                    {widget.groupByColumn === 'group' ? 'Grup Papan' : 'Sumbu X'}
+                                </Typography>
+                                {widget.settings?.breakdownColumnId && (
+                                    <Typography variant='caption' display='block' sx={{ mt: -0.5, fontStyle: 'italic' }}>
+                                        Broken down by: {columns.find(c => c.columnId === widget.settings.breakdownColumnId)?.columnName || 'Category'}
+                                    </Typography>
+                                )}
+                            </th>
+                            {series.map(s => (
+                                <th key={`${s.metricId}-${s.name}`} style={{ textAlign: 'right', padding: '8px', opacity: 0.5 }}>
+                                    <Typography variant='overline'>{s.name || s.metricName}</Typography>
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {labels.map((label, lIdx) => {
+                            const groupColor = getLabelColor(label)
+                            return (
+                                <tr key={label} style={{ borderBottom: '1px solid var(--mui-palette-divider)' }}>
+                                    <td style={{ padding: '8px', borderLeft: groupColor ? `4px solid ${groupColor}` : 'none' }}>
+                                        <Typography variant='body1' sx={{ fontWeight: 500 }}>{label}</Typography>
+                                    </td>
+                                    {series.map(s => (
+                                        <td key={`${s.metricId}-${s.name}`} style={{ textAlign: 'right', padding: '8px' }}>
+                                            <Typography variant='body1' color='primary' sx={{ fontWeight: 600 }}>
+                                                {formatValue(s.data[lIdx], s.metricId)}
+                                            </Typography>
+                                        </td>
+                                    ))}
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                    <tfoot>
+                        <tr style={{ borderTop: '2px solid var(--mui-palette-primary-main)' }}>
+                            <td style={{ padding: '8px' }}>
+                                <Typography variant='h6' sx={{ fontWeight: 700 }}>TOTAL</Typography>
+                            </td>
+                            {series.map((s, sIdx) => (
+                                <td key={`${s.metricId}-${s.name}`} style={{ textAlign: 'right', padding: '8px' }}>
+                                    <Typography variant='h6' color='primary' sx={{ fontWeight: 800 }}>
+                                        {formatValue(totals[sIdx], s.metricId)}
+                                    </Typography>
+                                </td>
+                            ))}
+                        </tr>
+                    </tfoot>
+                </table>
+            </Box>
+        </Box>
+    )
   }
   
   // Helper to check if Group By column is a Date
@@ -412,13 +723,17 @@ const DashboardView = ({ board, searchQuery }) => {
                </div>
                <CardContent className='h-full flex flex-col'>
                  <div className='flex-grow bg-transparent'>
-                    <ReactECharts 
-                        option={getChartOption(widget)} 
-                        style={{ height: '100%', width: '100%' }} 
-                        // Force resize when container changes
-                        autoResize={true}
-                        theme={theme.palette.mode === 'dark' ? 'dark' : 'light'}
-                    />
+                   {widget.chartType === 'summary' ? (
+                       <SummaryWidget widget={widget} />
+                   ) : (
+                       <ReactECharts 
+                           option={getChartOption(widget)} 
+                           style={{ height: '100%', width: '100%' }} 
+                           // Force resize when container changes
+                           autoResize={true}
+                           theme={theme.palette.mode === 'dark' ? 'dark' : 'light'}
+                       />
+                   )}
                  </div>
                </CardContent>
             </Card>
@@ -491,36 +806,60 @@ const DashboardView = ({ board, searchQuery }) => {
 
                        <Grid item xs={12}>
                            <Typography variant='overline' color='textSecondary' className='mb-2 block'>Data Source</Typography>
-                           <FormControl fullWidth className='mb-4'>
-                               <InputLabel>Group By (X-Axis)</InputLabel>
-                               <Select
-                                 label="Group By (X-Axis)"
-                                 value={currentWidgetConfig.groupByColumn}
-                                 onChange={e => {
-                                     const newCol = e.target.value
-                                     // Reset date grouping if switching away from date
-                                     const isDate = isDateColumn(newCol)
-                                     setCurrentWidgetConfig({
-                                         ...currentWidgetConfig, 
-                                         groupByColumn: newCol,
-                                         dateGrouping: isDate ? 'day' : undefined 
-                                     })
-                                 }}
-                               >
-                                  {columns.map(col => (
-                                      <MenuItem key={col.columnId} value={col.columnId}>
-                                          <div className='flex items-center gap-2 w-full'>
-                                              <i className={`tabler-${col.columnType === 'date' ? 'calendar' : col.columnType === 'status' ? 'list-check' : 'text-caption'} text-textSecondary text-sm`} />
-                                              {col.columnName || 'Untitled Column'}
-                                          </div>
-                                      </MenuItem>
-                                  ))}
-                               </Select>
-                           </FormControl>
+                           <FormControl fullWidth>
+                                   <InputLabel>Sumbu X (Kategori Utama)</InputLabel>
+                                   <Select
+                                       label="Sumbu X (Kategori Utama)"
+                                       value={currentWidgetConfig.groupByColumn}
+                                       onChange={e => {
+                                           const newCol = e.target.value
+                                           const isDate = isDateColumn(newCol)
+                                           setCurrentWidgetConfig({ 
+                                               ...currentWidgetConfig, 
+                                               groupByColumn: newCol,
+                                               dateGrouping: isDate ? 'day' : undefined 
+                                           })
+                                       }}
+                                   >
+                                       <MenuItem value=""><em>Select Column</em></MenuItem>
+                                       <MenuItem value="group">Board Group (Default)</MenuItem>
+                                       {columns.map(col => (
+                                           <MenuItem key={col.columnId} value={col.columnId}>
+                                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                   <i className={`tabler-${col.columnType === 'status' ? 'list-details' : col.columnType === 'date' ? 'calendar' : 'text-color'}`} />
+                                                   <span>{col.columnName || 'Untitled Column'}</span>
+                                               </Box>
+                                           </MenuItem>
+                                       ))}
+                                   </Select>
+                               </FormControl>
+
+                               <FormControl fullWidth className='mt-4'>
+                                   <InputLabel>Breakdown By (Sumbu X Kedua)</InputLabel>
+                                   <Select
+                                       label="Breakdown By (Sumbu X Kedua)"
+                                       value={currentWidgetConfig.settings?.breakdownColumnId || ''}
+                                       onChange={e => setCurrentWidgetConfig({ 
+                                           ...currentWidgetConfig, 
+                                           settings: { ...currentWidgetConfig.settings, breakdownColumnId: e.target.value } 
+                                       })}
+                                   >
+                                       <MenuItem value=""><em>No Breakdown (Single Group)</em></MenuItem>
+                                       <MenuItem value="group">Board Group</MenuItem>
+                                       {columns.map(col => (
+                                           <MenuItem key={col.columnId} value={col.columnId}>
+                                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                   <i className={`tabler-${col.columnType === 'status' ? 'list-details' : col.columnType === 'date' ? 'calendar' : 'text-color'}`} />
+                                                   <span>{col.columnName || 'Untitled Column'}</span>
+                                               </Box>
+                                           </MenuItem>
+                                       ))}
+                                   </Select>
+                               </FormControl>
 
                            {/* Date Grouping Option */}
                            {isDateColumn(currentWidgetConfig.groupByColumn) && (
-                               <FormControl fullWidth className='mb-4'>
+                               <FormControl fullWidth className='mt-4'>
                                    <InputLabel>Date Grouping</InputLabel>
                                    <Select
                                      label="Date Grouping"
@@ -535,7 +874,23 @@ const DashboardView = ({ board, searchQuery }) => {
                                </FormControl>
                            )}
 
-                           <div className='flex gap-2'>
+                           <FormControl fullWidth className='mt-4'>
+                                <InputLabel>Filter by Group</InputLabel>
+                                <Select
+                                    label="Filter by Group"
+                                    value={currentWidgetConfig.filterGroupId || ''}
+                                    onChange={e => setCurrentWidgetConfig({ ...currentWidgetConfig, filterGroupId: e.target.value })}
+                                >
+                                    <MenuItem value=""><em>All Groups (Default)</em></MenuItem>
+                                    {(board?.groups || []).map(g => (
+                                        <MenuItem key={g.groupId} value={String(g.groupId)}>
+                                            {g.groupName}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                           </FormControl>
+
+                           <div className='flex gap-2 mt-4'>
                                <FormControl fullWidth>
                                    <InputLabel>Aggregation</InputLabel>
                                    <Select
@@ -551,28 +906,128 @@ const DashboardView = ({ board, searchQuery }) => {
 
                                {currentWidgetConfig.aggregation !== 'count' && (
                                    <FormControl fullWidth>
-                                       <InputLabel>Value Column</InputLabel>
+                                       <InputLabel>Value Columns (Flexible Y-Axis)</InputLabel>
                                        <Select
-                                           label="Value Column"
-                                           value={currentWidgetConfig.metricColumn}
-                                           onChange={e => setCurrentWidgetConfig({ ...currentWidgetConfig, metricColumn: e.target.value })}
+                                           multiple
+                                           label="Value Columns (Flexible Y-Axis)"
+                                           value={currentWidgetConfig.settings?.metrics || []}
+                                           onChange={e => {
+                                               const val = e.target.value
+                                               setCurrentWidgetConfig({ 
+                                                   ...currentWidgetConfig, 
+                                                   settings: { ...currentWidgetConfig.settings, metrics: val },
+                                                   metricColumn: val[0] || '' // Sync primary for compatibility
+                                               })
+                                           }}
+                                           renderValue={(selected) => (
+                                               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                                   {selected.map((val) => (
+                                                       <div key={val} className='bg-primary/20 text-primary text-xs px-2 py-0.5 rounded'>
+                                                           {columns.find(c => c.columnId === val)?.columnName || val}
+                                                       </div>
+                                                   ))}
+                                               </Box>
+                                           )}
                                        >
-                                           <MenuItem value=""><em>Select Column</em></MenuItem>
-                                           {columns.filter(c => c.columnType === 'number' || c.columnType === 'currency').map(col => (
-                                               <MenuItem key={col.columnId} value={col.columnId}>
-                                                   <span className='text-textPrimary'>{col.columnName || 'Untitled Column'}</span>
-                                               </MenuItem>
-                                           ))}
-                                            {/* Fallback for other columns if needed */}
-                                           {columns.filter(c => c.columnType !== 'number' && c.columnType !== 'currency').map(col => (
-                                               <MenuItem key={col.columnId} value={col.columnId}>
-                                                   <span className='text-textSecondary opacity-80'>{col.columnName || 'Untitled Column'}</span>
-                                               </MenuItem>
-                                           ))}
+                                           {columns.map(col => {
+                                               const isNumeric = col.columnType === 'number' || col.columnType === '货币' || col.columnType === 'currency' || col.columnName?.toLowerCase().includes('pemasukan') || col.columnName?.toLowerCase().includes('nominal')
+                                               return (
+                                                   <MenuItem key={col.columnId} value={col.columnId}>
+                                                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                           <i className={`tabler-${isNumeric ? 'hash' : 'text-color'} ${isNumeric ? 'text-primary' : 'text-textSecondary opacity-50'}`} />
+                                                           <span>{col.columnName || 'Untitled Column'}</span>
+                                                       </Box>
+                                                   </MenuItem>
+                                               )
+                                           })}
                                        </Select>
                                    </FormControl>
                                )}
-                           </div>
+                            </div>
+                        </Grid>
+
+                        {/* Y-Axis Advanced Settings */}
+                        <Grid item xs={12}>
+                            <Divider>
+                                <Typography variant='caption' sx={{ fontWeight: 'bold', textTransform: 'uppercase', opacity: 0.5 }}>
+                                    Y-Axis Advanced
+                                </Typography>
+                            </Divider>
+                        </Grid>
+                        
+                        <Grid item xs={12}>
+                             <div className='flex items-center gap-4 mb-4'>
+                                 <FormControl fullWidth>
+                                     <InputLabel>Scale Min</InputLabel>
+                                     <TextField 
+                                         type='number' 
+                                         size='small' 
+                                         disabled={currentWidgetConfig.settings?.yAxisAuto}
+                                         value={currentWidgetConfig.settings?.yAxisMin || ''}
+                                         onChange={e => setCurrentWidgetConfig({
+                                             ...currentWidgetConfig,
+                                             settings: { ...currentWidgetConfig.settings, yAxisMin: e.target.value ? parseFloat(e.target.value) : null }
+                                         })}
+                                     />
+                                 </FormControl>
+                                 <FormControl fullWidth>
+                                     <InputLabel>Scale Max</InputLabel>
+                                     <TextField 
+                                         type='number' 
+                                         size='small' 
+                                         disabled={currentWidgetConfig.settings?.yAxisAuto}
+                                         value={currentWidgetConfig.settings?.yAxisMax || ''}
+                                         onChange={e => setCurrentWidgetConfig({
+                                             ...currentWidgetConfig,
+                                             settings: { ...currentWidgetConfig.settings, yAxisMax: e.target.value ? parseFloat(e.target.value) : null }
+                                         })}
+                                     />
+                                 </FormControl>
+                             </div>
+                             <div className='flex gap-4'>
+                                 <Button 
+                                     size='small' 
+                                     variant={currentWidgetConfig.settings?.yAxisAuto ? 'contained' : 'outlined'}
+                                     onClick={() => setCurrentWidgetConfig({
+                                         ...currentWidgetConfig,
+                                         settings: { ...currentWidgetConfig.settings, yAxisAuto: true }
+                                     })}
+                                 >
+                                     Auto Scale
+                                 </Button>
+                                 <Button 
+                                     size='small' 
+                                     variant={!currentWidgetConfig.settings?.yAxisAuto ? 'contained' : 'outlined'}
+                                     onClick={() => setCurrentWidgetConfig({
+                                         ...currentWidgetConfig,
+                                         settings: { ...currentWidgetConfig.settings, yAxisAuto: false }
+                                     })}
+                                 >
+                                     Manual Scale
+                                 </Button>
+                             </div>
+                        </Grid>
+
+                        <Grid item xs={12}>
+                            <FormControl fullWidth>
+                                 <InputLabel>Secondary Y-Axis Metrics</InputLabel>
+                                 <Select
+                                     multiple
+                                     label="Secondary Y-Axis Metrics"
+                                     value={currentWidgetConfig.settings?.secondaryMetrics || []}
+                                     onChange={e => setCurrentWidgetConfig({
+                                         ...currentWidgetConfig,
+                                         settings: { ...currentWidgetConfig.settings, secondaryMetrics: e.target.value, showSecondaryAxis: e.target.value.length > 0 }
+                                     })}
+                                     renderValue={(selected) => `On Right Axis: ${selected.length} items`}
+                                 >
+                                     {(currentWidgetConfig.settings?.metrics || []).map(mId => (
+                                         <MenuItem key={mId} value={mId}>
+                                             {columns.find(c => c.columnId === mId)?.columnName || mId}
+                                         </MenuItem>
+                                     ))}
+                                 </Select>
+                            </FormControl>
                        </Grid>
 
                        <Grid item xs={12}><Divider/></Grid>
@@ -641,15 +1096,17 @@ const DashboardView = ({ board, searchQuery }) => {
                                     {currentWidgetConfig.title || 'Untitled Widget'}
                                 </Typography>
                                 <div className='flex-grow relative'>
-                                     {/* We use a key to force re-render animation on config change for better feel */}
-                                     {/* or just let ReactECharts handle updates */}
-                                     <ReactECharts 
-                                        key={JSON.stringify(currentWidgetConfig) + theme.palette.mode}
-                                        option={getChartOption(currentWidgetConfig, true)} 
-                                        style={{ height: '100%', width: '100%', minHeight: '400px' }} 
-                                        opts={{ renderer: 'canvas' }}
-                                        theme={theme.palette.mode === 'dark' ? 'dark' : 'light'}
-                                     />
+                                     {currentWidgetConfig.chartType === 'summary' ? (
+                                        <SummaryWidget widget={currentWidgetConfig} isPreview={true} />
+                                     ) : (
+                                        <ReactECharts 
+                                            key={JSON.stringify(currentWidgetConfig) + theme.palette.mode}
+                                            option={getChartOption(currentWidgetConfig, true)} 
+                                            style={{ height: '100%', width: '100%', minHeight: '400px' }} 
+                                            opts={{ renderer: 'canvas' }}
+                                            theme={theme.palette.mode === 'dark' ? 'dark' : 'light'}
+                                        />
+                                     )}
                                 </div>
                             </div>
                         )}
@@ -665,7 +1122,7 @@ const DashboardView = ({ board, searchQuery }) => {
               variant='contained' 
               size='large'
               startIcon={<i className='tabler-device-floppy'/>}
-              disabled={!currentWidgetConfig.title || !currentWidgetConfig.groupByColumn}
+              disabled={!currentWidgetConfig.title || !currentWidgetConfig.groupByColumn || loading}
             >
              {editingWidgetId ? 'Update Widget' : 'Create Widget'}
            </Button>
