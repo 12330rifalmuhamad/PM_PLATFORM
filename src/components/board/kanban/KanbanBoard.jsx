@@ -121,11 +121,13 @@ const KanbanBoard = () => {
           {columns.map(column => (
             <KanbanList
               key={column.id}
-              id={column.id}
-              title={column.title}
+              column={column}
               tasks={column.taskIds.map(id => tasksMap.get(id))}
               board={board}
               setDrawerOpen={setDrawerItem}
+              columns={columns}
+              setColumns={setColumns}
+              mutate={mutate}
             />
           ))}
         </div>

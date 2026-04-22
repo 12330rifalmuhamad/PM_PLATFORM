@@ -113,6 +113,20 @@ const KanbanList = props => {
     }
   }
 
+  // Handle Move Column
+  const handleMoveColumn = direction => {
+    const currentIndex = columns.findIndex(col => col.id === column.id)
+    const targetIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1
+
+    if (targetIndex >= 0 && targetIndex < columns.length) {
+      const newColumns = [...columns]
+      const temp = newColumns[currentIndex]
+      newColumns[currentIndex] = newColumns[targetIndex]
+      newColumns[targetIndex] = temp
+      setColumns(newColumns)
+    }
+  }
+
   // Get column color based on status
   const getColumnColor = status => {
     switch (status) {
@@ -185,8 +199,24 @@ const KanbanList = props => {
             {column.title}{' '}
             <span className='opacity-80 text-sm font-normal ml-1'>({columns.find(c => c.id === column.id)?.taskIds?.length || 0})</span>
           </Typography>
-          <div className='flex items-center'>
-            <i className={classnames('tabler-arrows-move text-white/70 list-handle cursor-grab', styles.drag)} />
+          <div className='flex items-center gap-1'>
+            <IconButton
+              size='small'
+              onClick={() => handleMoveColumn('left')}
+              disabled={columns.findIndex(c => c.id === column.id) === 0}
+              className='text-white/70 hover:text-white'
+            >
+              <i className='tabler-chevron-left text-lg' />
+            </IconButton>
+            <IconButton
+              size='small'
+              onClick={() => handleMoveColumn('right')}
+              disabled={columns.findIndex(c => c.id === column.id) === columns.length - 1}
+              className='text-white/70 hover:text-white'
+            >
+              <i className='tabler-chevron-right text-lg' />
+            </IconButton>
+            <i className={classnames('tabler-arrows-move text-white/70 list-handle cursor-grab mx-1', styles.drag)} />
             <OptionMenu
               iconClassName='text-xl text-white'
               options={[
@@ -219,6 +249,10 @@ const KanbanList = props => {
                 onOpenDrawer={onOpenDrawer}
                 board={board}
                 mutate={mutate}
+                columns={columns}
+                setColumns={setColumns}
+                tasksList={tasksList}
+                setTasksList={setTasksList}
               />
             )
         )}

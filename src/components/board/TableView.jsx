@@ -2298,6 +2298,70 @@
     // Wrapper for consistency
     const handleUpdateValue = (item, col, val) => handleGeneralUpdate(item, col, val)
 
+    // --- NEW: COLUMN & ROW MOVEMENT HANDLERS ---
+    const handleMoveColumn = async (direction, colId) => {
+      const currentIndex = headerColumns.findIndex(c => c.columnId === colId)
+      const targetIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1
+
+      if (targetIndex >= 0 && targetIndex < headerColumns.length) {
+        const newColumns = [...headerColumns]
+        const [movedCol] = newColumns.splice(currentIndex, 1)
+        newColumns.splice(targetIndex, 0, movedCol)
+
+        setHeaderColumns(newColumns)
+
+        const reorderPayload = newColumns.map((col, index) => ({
+          columnId: col.columnId,
+          sortOrder: index + 1
+        }))
+
+        try {
+          await fetch(`/api/boards/${board.boardId}/columns/reorder`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ columns: reorderPayload })
+          })
+          mutate(boardApiEndpoint)
+        } catch (error) {
+          console.error('Failed to move column:', error)
+        }
+      }
+    }
+
+    const handleMoveRow = async (direction, taskId, groupId) => {
+      const group = groups.find(g => g.groupId === groupId)
+      if (!group) return
+      const items = group.items
+      const currentIndex = items.findIndex(i => i.taskId === taskId)
+      const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+
+      if (targetIndex >= 0 && targetIndex < items.length) {
+        const newGroups = groups.map(g => {
+          if (g.groupId === groupId) {
+            const newItems = [...g.items]
+            const [movedItem] = newItems.splice(currentIndex, 1)
+            newItems.splice(targetIndex, 0, movedItem)
+            return { ...g, items: newItems }
+          }
+          return g
+        })
+
+        await updateOptimisticGroups(newGroups)
+
+        try {
+          await fetch(`/api/tasks/${taskId}/reorder`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ targetIndex, groupId })
+          })
+          mutate(boardApiEndpoint)
+        } catch (error) {
+          console.error('Failed to move row:', error)
+          mutate(boardApiEndpoint) // Rollback on failure
+        }
+      }
+    }
+
     // 6. RENAME TASK
     const handleUpdateTaskTitle = (taskId, newTitle) => {
       setEditingTaskName(null)
@@ -2968,6 +3032,26 @@
                       </div>
                     )}
                     <span className='truncate'>{column.columnName}</span>
+                    {isMainHeader && (
+                      <div className='flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-1 bg-backgroundPaper border border-divider rounded p-0.5'>
+                        <IconButton
+                          size='small'
+                          className='!p-0'
+                          disabled={headerColumns.findIndex(c => c.columnId === column.columnId) === 0}
+                          onClick={e => { e.stopPropagation(); handleMoveColumn('left', column.columnId); }}
+                        >
+                          <i className='tabler-chevron-left text-xs' />
+                        </IconButton>
+                        <IconButton
+                          size='small'
+                          className='!p-0'
+                          disabled={headerColumns.findIndex(c => c.columnId === column.columnId) === headerColumns.length - 1}
+                          onClick={e => { e.stopPropagation(); handleMoveColumn('right', column.columnId); }}
+                        >
+                          <i className='tabler-chevron-right text-xs' />
+                        </IconButton>
+                      </div>
+                    )}
                   </div>
 
                   {isMainHeader && (
@@ -3376,6 +3460,25 @@
                                             {...dragListeners}
                                         >
                                             <i className='tabler-grip-vertical text-lg' />
+                                        </div>
+
+                                        <div className='flex flex-col gap-0 opacity-0 group-hover:opacity-100 transition-opacity ml-1 bg-backgroundPaper border border-divider rounded-sm'>
+                                          <IconButton
+                                            size='small'
+                                            className='!p-0'
+                                            disabled={group.items.findIndex(i => i.taskId === item.taskId) === 0}
+                                            onClick={e => { e.stopPropagation(); handleMoveRow('up', item.taskId, group.groupId); }}
+                                          >
+                                            <i className='tabler-chevron-up text-[10px]' />
+                                          </IconButton>
+                                          <IconButton
+                                            size='small'
+                                            className='!p-0'
+                                            disabled={group.items.findIndex(i => i.taskId === item.taskId) === group.items.length - 1}
+                                            onClick={e => { e.stopPropagation(); handleMoveRow('down', item.taskId, group.groupId); }}
+                                          >
+                                            <i className='tabler-chevron-down text-[10px]' />
+                                          </IconButton>
                                         </div>
                                         
                                         <Checkbox
