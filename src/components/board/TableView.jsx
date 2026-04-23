@@ -1131,21 +1131,25 @@
     const [editingLabelId, setEditingLabelId] = useState(null)
 
     const initialOptions = useMemo(() => {
-      if (column.columnName.toLowerCase() === 'prioritas')
-        return [
-          { id: 'p1', label: 'Tinggi', color: 'bg-purple-500/10', text: 'text-purple-400' },
-          { id: 'p2', label: 'Medium', color: 'bg-sky-500/10', text: 'text-sky-400' },
-          { id: 'p3', label: 'Rendah', color: 'bg-green-500/10', text: 'text-green-400' }
-        ]
+      const getOptionTextColor = (bgColor) => {
+        if (!bgColor) return 'text-white'
+        return bgColor.includes('/10') || bgColor.includes('gray') ? 'text-gray-400' : 'text-white'
+      }
 
-      return column.options?.length
-        ? column.options.map(opt => ({ ...opt, id: opt.optionId.toString(), text: 'text-white' }))
+      const options = column.options?.length
+        ? column.options.map(opt => ({ 
+            ...opt, 
+            id: opt.optionId.toString(), 
+            text: getOptionTextColor(opt.color) 
+          }))
         : [
             { id: 's1', label: 'Sedang Dikerjakan', color: 'bg-yellow-500', text: 'text-white' },
             { id: 's2', label: 'Buntu', color: 'bg-red-500', text: 'text-white' },
             { id: 's3', label: 'Selesai', color: 'bg-green-500', text: 'text-white' },
             { id: 's4', label: 'Belum Mulai', color: 'bg-gray-500', text: 'text-white' }
           ]
+      
+      return options
     }, [column])
 
     const [labels, setLabels] = useState(initialOptions)
@@ -1154,15 +1158,17 @@
       setLabels(initialOptions)
     }, [initialOptions])
 
+    const [quickAddLabel, setQuickAddLabel] = useState('')
+
     const handleLabelChange = (id, newText) =>
       setLabels(prev => prev.map(opt => (opt.id === id ? { ...opt, label: newText } : opt)))
 
     const handleDeleteLabel = id => setLabels(prev => prev.filter(opt => opt.id !== id))
 
-    const handleAddNewLabel = () =>
+    const handleAddNewLabel = (labelText = 'New Label') =>
       setLabels(prev => [
         ...prev,
-        { id: crypto.randomUUID(), label: 'New Label', color: 'bg-gray-400', text: 'text-white' }
+        { id: Date.now().toString() + Math.random().toString(36).substr(2, 5), label: labelText, color: 'bg-gray-400', text: 'text-white' }
       ])
 
     const handleOpenColorPicker = (event, id) => {
@@ -1180,16 +1186,28 @@
       setEditingLabelId(null)
     }
 
-    const handleSaveLabels = async () => {
+    const handleSaveLabels = async (customLabels = null) => {
       setIsLoading(true)
+      // Ensure we only use plain data and not event objects
+      const rawLabels = (customLabels && Array.isArray(customLabels)) ? customLabels : labels
+      
+      const labelsToProcess = rawLabels.map(l => ({
+        id: String(l.id),
+        label: typeof l.label === 'string' ? l.label : 'New Label',
+        color: typeof l.color === 'string' ? l.color : 'bg-gray-400'
+      }))
+
       const renameMap = {}
 
       initialOptions.forEach(originalOpt => {
-        const newOpt = labels.find(l => l.id === originalOpt.id)
+        const newOpt = labelsToProcess.find(l => l.id === originalOpt.id)
 
         if (newOpt && newOpt.label !== originalOpt.label) renameMap[originalOpt.label] = newOpt.label
       })
-      const optionsToSave = labels.map(({ id, label, color }) => ({ label, color: color.split(' ')[0] }))
+      const optionsToSave = labelsToProcess.map(({ label, color }) => ({ 
+        label, 
+        color: color.split(' ')[0] 
+      }))
 
       try {
         const response = await fetch(`/api/columns/${column.columnId}/options`, {
@@ -1199,14 +1217,26 @@
         })
 
         if (!response.ok) throw new Error('Failed to save labels')
-        mutate(`/api/boards/${board.boardId}`)
+        await mutate(`/api/boards/${board.boardId}`)
         setIsEditingLabels(false)
+        setQuickAddLabel('')
       } catch (error) {
         console.error('Gagal menyimpan label:', error)
         alert('Gagal menyimpan label.')
       } finally {
         setIsLoading(false)
       }
+    }
+
+    const handleQuickAdd = async () => {
+        if (!quickAddLabel.trim()) return
+        
+        const newLabels = [
+            ...labels,
+            { id: 'temp-' + Date.now(), label: quickAddLabel, color: 'bg-gray-400', text: 'text-white' }
+        ]
+        
+        await handleSaveLabels(newLabels)
     }
 
     const renderEditor = () => {
@@ -1285,7 +1315,7 @@
                   variant='outlined'
                   size='small'
                   startIcon={<i className='tabler-plus' />}
-                  onClick={handleAddNewLabel}
+                  onClick={() => handleAddNewLabel()}
                 >
                   New label
                 </Button>
@@ -1301,7 +1331,7 @@
                   >
                     Back
                   </Button>
-                  <Button variant='contained' size='small' onClick={handleSaveLabels} disabled={isLoading}>
+                  <Button variant='contained' size='small' onClick={() => handleSaveLabels()} disabled={isLoading}>
                     {isLoading ? 'Saving...' : 'Apply'}
                   </Button>
                 </div>
@@ -1311,29 +1341,73 @@
 
           return (
             <Box className='p-2 flex flex-col gap-2' sx={{ width: 220 }}>
-              {labels.map(option => (
-                <Button
-                  key={option.id}
-                  variant={column.columnName.toLowerCase() === 'prioritas' ? 'outlined' : 'contained'}
-                  className={`!font-semibold !justify-start !shadow-none ${option.color} ${option.text}`}
-                  style={
-                    column.columnName.toLowerCase() === 'prioritas' ? { borderColor: option.color.split(' ')[1] } : {}
-                  }
-                  onClick={() => {
-                    onValueSelect(option.label)
-                    onClose()
-                  }}
-                >
-                  {option.label}
-                </Button>
-              ))}
-              <Divider className='!my-2' />
+              {labels.map(option => {
+                const isPriority = column.columnName.toLowerCase() === 'prioritas';
+                const colorVal = option.color.split(' ')[0];
+                
+                return (
+                  <Button
+                    key={option.id}
+                    variant={isPriority ? 'outlined' : 'contained'}
+                    className={`!font-semibold !justify-start !shadow-none ${option.color} ${option.text}`}
+                    style={
+                      isPriority ? { 
+                        borderColor: colorVal.includes('/10') ? 'currentColor' : colorVal.replace('bg-', ''),
+                        color: option.text === 'text-white' ? undefined : 'currentColor'
+                      } : {}
+                    }
+                    onClick={() => {
+                      onValueSelect(option.label)
+                      onClose()
+                    }}
+                  >
+                    {option.label}
+                  </Button>
+                )
+              })}
+              <Divider className='!my-1' />
+              <Box className="px-1">
+                <TextField 
+                    fullWidth
+                    size="small"
+                    placeholder="Quick add label..."
+                    autoComplete="off"
+                    value={quickAddLabel}
+                    onChange={e => setQuickAddLabel(e.target.value)}
+                    onKeyDown={async e => {
+                        if (e.key === 'Enter' && quickAddLabel.trim()) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const newLabelName = quickAddLabel.trim();
+                            await handleQuickAdd();
+                            onValueSelect(newLabelName);
+                            onClose();
+                        }
+                    }}
+                    InputProps={{
+                        disableUnderline: true,
+                        className: '!text-xs',
+                        endAdornment: quickAddLabel && (
+                            <InputAdornment position="end">
+                                <IconButton size="small" onClick={async () => {
+                                    const newLabelName = quickAddLabel.trim();
+                                    await handleQuickAdd();
+                                    onValueSelect(newLabelName);
+                                    onClose();
+                                }}>
+                                    <i className="tabler-plus text-xs" />
+                                </IconButton>
+                            </InputAdornment>
+                        )
+                    }}
+                />
+              </Box>
               <Button
                 variant='text'
                 size='small'
                 startIcon={<i className='tabler-pencil' />}
                 onClick={() => setIsEditingLabels(true)}
-                className='!normal-case !text-textSecondary'
+                className='!normal-case !text-textSecondary !justify-start'
               >
                 Edit Labels
               </Button>
@@ -3815,7 +3889,7 @@
             anchorEl={editingCell.anchorEl}
             onClose={() => setEditingCell(null)}
             column={{
-              ...editingCell.column,
+              ...getFreshColumn(editingCell.column),
               currentValue: (editingCell.item.values || []).find(
                 v => normalizeId(v.columnId) === normalizeId(editingCell.column.columnId)
               )?.value

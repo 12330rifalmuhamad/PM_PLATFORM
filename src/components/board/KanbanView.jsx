@@ -65,29 +65,34 @@ const KanbanView = ({ board }) => {
       })
     })
 
-    // Create kanban columns based on unique status values (matching table view)
-    const statusOrder = ['Belum Mulai', 'Sedang Dikerjakan', 'Buntu', 'Selesai']
+    // Create kanban columns based on dynamic status options
+    let statusOptions = statusColumn.options || []
+    
+    // Fallback defaults if no options defined
+    if (statusOptions.length === 0) {
+      statusOptions = [
+        { label: 'Belum Mulai', color: 'bg-gray-500' },
+        { label: 'Sedang Dikerjakan', color: 'bg-yellow-500' },
+        { label: 'Buntu', color: 'bg-red-500' },
+        { label: 'Selesai', color: 'bg-green-500' }
+      ]
+    }
 
-    const columns = statusOrder.map(status => ({
-      id: status,
-      title: status,
+    const columns = statusOptions.map(opt => ({
+      id: opt.label,
+      title: opt.label,
+      color: opt.color,
       taskIds: []
     }))
 
-    const uncategorizedColumn = { id: 'Belum Mulai', title: 'Belum Mulai', taskIds: [] }
-
     // Assign tasks to appropriate status columns
     allTasks.forEach(task => {
-      const targetColumn = columns.find(c => c.id === task.status)
-
+      // Find matching column, or default to first column if no match found
+      const targetColumn = columns.find(c => c.id === task.status) || columns[0]
       if (targetColumn) {
         targetColumn.taskIds.push(task.taskId)
-      } else {
-        uncategorizedColumn.taskIds.push(task.taskId)
       }
     })
-
-    if (uncategorizedColumn.taskIds.length > 0) columns.push(uncategorizedColumn)
 
     return { kanbanColumns: columns, tasksMap: allTasks }
   }, [board])

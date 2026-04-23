@@ -129,6 +129,12 @@ const KanbanList = props => {
 
   // Get column color based on status
   const getColumnColor = status => {
+    if (column.color) {
+        // Handle Tailwind classes vs custom hex? 
+        // column.color is expected to be a tailwind class like 'bg-yellow-500'
+        return column.color.split(' ')[0]
+    }
+
     switch (status) {
       case 'Selesai':
         return 'bg-[var(--mui-palette-success-main)]'
