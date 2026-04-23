@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 
 // Next Imports
 import { useSession } from 'next-auth/react'
@@ -12,36 +12,27 @@ import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
-import Avatar from '@mui/material/Avatar'
 import LinearProgress from '@mui/material/LinearProgress'
-import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 import { useTheme } from '@mui/material/styles'
-import Divider from '@mui/material/Divider'
-import IconButton from '@mui/material/IconButton'
 import Skeleton from '@mui/material/Skeleton'
-import Button from '@mui/material/Button'
 
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
-import CustomChip from '@core/components/mui/Chip'
 import AppReactApexCharts from '@/libs/styles/AppReactApexCharts'
+import StatsCard from './components/StatsCard'
+import ActivityTimeline from './components/ActivityTimeline'
+import PerformanceChart from './components/PerformanceChart'
 
 const MonitoringHub = () => {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [currentTime, setCurrentTime] = useState(null) // Init as null for hydration safety
+  const [currentTime, setCurrentTime] = useState(null)
   
   const theme = useTheme()
   const { data: session } = useSession()
 
-  useEffect(() => {
-    setCurrentTime(new Date()) // Set on mount
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
-    return () => clearInterval(timer)
-  }, [])
-
-  const fetchData = () => {
+  const fetchData = useCallback(() => {
     setLoading(true)
     fetch('/api/monitoring')
       .then(res => res.json())
@@ -53,72 +44,23 @@ const MonitoringHub = () => {
         console.error(err)
         setLoading(false)
       })
-  }
-
-  useEffect(() => {
-    fetchData()
   }, [])
 
-  const getSparklineConfig = (color) => ({
-    chart: {
-      parentHeightOffset: 0,
-      toolbar: { show: false },
-      sparkline: { enabled: true }
-    },
-    tooltip: { enabled: false },
-    dataLabels: { enabled: false },
-    stroke: { width: 2.5, curve: 'smooth' },
-    grid: { show: false, padding: { bottom: 10 } },
-    fill: {
-      type: 'gradient',
-      gradient: {
-        opacityTo: 0,
-        opacityFrom: 0.5,
-        shadeIntensity: 1,
-        stops: [0, 100],
-        colorStops: [
-          [{ offset: 0, opacity: 0.5, color: color === 'primary' ? '#7367F0' : color === 'success' ? '#28C76F' : color === 'warning' ? '#FF9F43' : '#EA5455' },
-           { offset: 100, opacity: 0, color: '#ffffff' }]
-        ]
-      }
-    },
-    xaxis: { labels: { show: false }, axisTicks: { show: false }, axisBorder: { show: false } },
-    yaxis: { show: false }
-  })
+  useEffect(() => {
+    setCurrentTime(new Date())
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    fetchData()
+    return () => clearInterval(timer)
+  }, [fetchData])
 
-  const activityChartConfig = {
-    chart: {
-      type: 'area',
-      parentHeightOffset: 0,
-      toolbar: { show: false }
-    },
-    dataLabels: { enabled: false },
-    stroke: { curve: 'smooth', width: 3 },
-    colors: ['#7367F0'],
-    fill: {
-      type: 'gradient',
-      gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1, stops: [0, 90, 100] }
-    },
-    xaxis: {
-      categories: data?.charts?.activityTimeline?.labels || [],
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-      labels: { style: { colors: '#a8aaae' } }
-    },
-    yaxis: {
-        labels: { style: { colors: '#a8aaae' } }
-    },
-    grid: { strokeDashArray: 8, borderColor: '#e6e6e8' }
-  }
-
-  const statusDonutConfig = {
+  const statusDonutConfig = useMemo(() => ({
     labels: data?.charts?.statusDistribution?.labels || [],
     colors: [
-      '#28C76F', // success
-      '#7367F0', // primary
-      '#FF9F43', // warning
-      '#00CFE8', // info
-      '#EA5455'  // error
+      theme.palette.success?.main || '#28C76F', 
+      theme.palette.primary?.main || '#7367F0', 
+      theme.palette.warning?.main || '#FF9F43', 
+      theme.palette.info?.main || '#00CFE8', 
+      theme.palette.error?.main || '#EA5455'
     ],
     chart: { type: 'donut' },
     stroke: { width: 0 },
@@ -127,31 +69,41 @@ const MonitoringHub = () => {
     plotOptions: {
         pie: {
             donut: {
-                size: '80%',
+                size: '75%',
                 labels: {
                     show: true,
                     total: {
                         show: true,
                         label: 'Tasks',
-                        fontSize: '1.25rem',
-                        color: '#6d6f77',
+                        fontSize: '1.5rem',
+                        fontWeight: 700,
+                        color: theme.palette.text.primary,
                         formatter: () => data?.stats?.activeTasks?.value || 0
-                    }
+                    },
+                    name: { fontSize: '0.875rem' },
+                    value: { fontSize: '1.5rem', fontWeight: 700, color: theme.palette.text.primary }
                 }
             }
         }
     }
-  }
+  }), [data, theme])
 
   if (loading && !data) return (
     <Box sx={{ p: 4 }}>
       <Skeleton variant="text" sx={{ fontSize: '3rem', width: '40%', mb: 4 }} />
-      <Skeleton variant="rounded" height={200} sx={{ mb: 6 }} />
+      <Skeleton variant="rounded" height={220} sx={{ mb: 6, borderRadius: 4 }} />
       <Grid container spacing={6}>
         {[1, 2, 3, 4].map(idx => (
-          <Grid key={idx} size={{ xs: 12, sm: 6, md: 3 }}><Skeleton variant="rounded" height={150} /></Grid>
+          <Grid key={idx} size={{ xs: 12, sm: 6, md: 3 }}><Skeleton variant="rounded" height={160} sx={{ borderRadius: 3 }} /></Grid>
         ))}
       </Grid>
+    </Box>
+  )
+
+  if (!data) return (
+    <Box sx={{ p: 10, textAlign: 'center' }}>
+        <Typography variant='h5' color='text.secondary' sx={{ mb: 4 }}>Initializing Command Center...</Typography>
+        <LinearProgress sx={{ maxWidth: '400px', mx: 'auto', borderRadius: 2 }} />
     </Box>
   )
 
@@ -164,64 +116,81 @@ const MonitoringHub = () => {
 
   return (
     <Grid container spacing={6}>
-      {/* Premium Hero Card */}
+      {/* Premium Hero Card with Glassmorphism Overlay */}
       <Grid size={{ xs: 12 }}>
         <Card sx={{ 
           background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
           color: 'common.white',
           position: 'relative',
           overflow: 'hidden',
-          borderRadius: 4,
-          boxShadow: '0 8px 32px rgba(115, 103, 240, 0.3)'
+          borderRadius: 5,
+          boxShadow: '0 12px 40px rgba(115, 103, 240, 0.35)'
         }}>
-          <Box sx={{ position: 'absolute', bottom: -50, right: -50, opacity: 0.15 }}>
-            <i className='tabler-chart-pie text-[250px]' />
-          </Box>
-          <CardContent sx={{ p: { xs: 6, md: 10 }, position: 'relative' }}>
+          {/* Animated Background Decoration */}
+          <Box sx={{ 
+            position: 'absolute', top: -100, right: -100, 
+            width: 400, height: 400, 
+            background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)',
+            borderRadius: '50%'
+          }} />
+          
+          <CardContent sx={{ p: { xs: 6, md: 12 }, position: 'relative' }}>
             <Grid container spacing={6} alignItems='center'>
                 <Grid size={{ xs: 12, md: 8 }}>
-                    <Typography variant='h3' color='inherit' sx={{ mb: 2, fontWeight: 700, letterSpacing: '-0.5px' }}>
+                    <Typography variant='h2' color='inherit' sx={{ mb: 2, fontWeight: 800, letterSpacing: '-1.5px', textShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
                         Good {!currentTime ? 'Day' : currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 18 ? 'Afternoon' : 'Evening'}, {session?.user?.name || 'Rifal'}!
                     </Typography>
-                    <Typography variant='h6' color='inherit' sx={{ opacity: 0.9, mb: 6, display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <i className='tabler-calendar-event' />
+                    <Typography variant='h6' color='inherit' sx={{ opacity: 0.85, mb: 8, display: 'flex', alignItems: 'center', gap: 3, fontWeight: 400 }}>
+                        <i className='tabler-calendar-event text-2xl' />
                         {currentTime ? currentTime.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '--'}
                     </Typography>
+                    
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                         <Box sx={{ 
-                            background: 'rgba(255, 255, 255, 0.15)', 
-                            backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            borderRadius: 2,
-                            px: 4, py: 2,
-                            display: 'flex', alignItems: 'center', gap: 3
+                            background: 'rgba(255, 255, 255, 0.12)', 
+                            backdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(255, 255, 255, 0.25)',
+                            borderRadius: '16px',
+                            px: 5, py: 2.5,
+                            display: 'flex', alignItems: 'center', gap: 3,
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
                         }}>
-                            <Box sx={{ width: 10, height: 10, bgcolor: theme.palette.success.main, borderRadius: '50%', boxShadow: `0 0 10px ${theme.palette.success.main}` }} />
-                            <Typography color='inherit' variant='body2' sx={{ fontWeight: 500 }}>System Monitoring: Active</Typography>
+                            <Box sx={{ 
+                                width: 12, height: 12, bgcolor: '#28C76F', borderRadius: '50%', 
+                                boxShadow: '0 0 15px #28C76F',
+                                animation: 'pulse 2s infinite'
+                            }} />
+                            <Typography color='inherit' variant='body1' sx={{ fontWeight: 600 }}>Command Center: Active</Typography>
                         </Box>
+                        
                         <Box sx={{ 
-                            background: 'rgba(255, 255, 255, 0.15)', 
-                            backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            borderRadius: 2,
-                            px: 4, py: 2,
-                            display: 'flex', alignItems: 'center', gap: 3
+                            background: 'rgba(255, 255, 255, 0.12)', 
+                            backdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(255, 255, 255, 0.25)',
+                            borderRadius: '16px',
+                            px: 5, py: 2.5,
+                            display: 'flex', alignItems: 'center', gap: 3,
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
                         }}>
-                            <i className='tabler-clock' />
-                            <Typography color='inherit' variant='body2' sx={{ fontWeight: 500 }}>{currentTime ? currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--'}</Typography>
+                            <i className='tabler-clock text-xl' />
+                            <Typography color='inherit' variant='h5' sx={{ fontWeight: 700, letterSpacing: '1px' }}>
+                                {currentTime ? currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--'}
+                            </Typography>
                         </Box>
                     </Box>
                 </Grid>
                 <Grid size={{ xs: 0, md: 4 }} sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'flex-end' }}>
                     <Box sx={{ 
-                        width: 160, height: 160, 
-                        background: 'rgba(255, 255, 255, 0.1)', 
-                        backdropFilter: 'blur(20px)',
-                        borderRadius: '24%',
+                        width: 180, height: 180, 
+                        background: 'rgba(255, 255, 255, 0.15)', 
+                        backdropFilter: 'blur(25px)',
+                        borderRadius: '35%',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        border: '1px solid rgba(255, 255, 255, 0.2)'
+                        border: '1.5px solid rgba(255, 255, 255, 0.3)',
+                        boxShadow: 'inset 0 0 20px rgba(255,255,255,0.2), 0 10px 30px rgba(0,0,0,0.1)',
+                        transform: 'rotate(5deg)'
                     }}>
-                        <i className='tabler-rocket text-[80px] text-white animate-bounce' />
+                        <i className='tabler-rocket text-[90px] text-white' style={{ filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.5))' }} />
                     </Box>
                 </Grid>
             </Grid>
@@ -229,168 +198,101 @@ const MonitoringHub = () => {
         </Card>
       </Grid>
 
-      {/* Interactive Stats Cards with Sparklines */}
+      {/* Sparkline Stats Grid */}
       {statsCards.map((card, index) => (
         <Grid key={index} size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ 
-             overflow: 'hidden', 
-             transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
-             '&:hover': { transform: 'translateY(-8px)', boxShadow: theme.shadows[8] }
-          }}>
-            <CardContent sx={{ pb: 0 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
-                    <CustomAvatar color={card.color} skin='light' variant='rounded' size={46}>
-                        <i className={`${card.icon} text-2xl`} />
-                    </CustomAvatar>
-                    <Typography variant='caption' sx={{ bgcolor: `${theme.palette[card.color].main}15`, color: `${card.color}.main`, px: 2, py: 0.5, borderRadius: 1, fontWeight: 600 }}>
-                        {card.data?.trend ? 'Trending Up' : 'Active'}
-                    </Typography>
-              </Box>
-              <Typography variant='h4' sx={{ mb: 0.5, fontWeight: 700 }}>{card.data?.value || 0}</Typography>
-              <Typography variant='body2' color='text.secondary' sx={{ mb: 4 }}>{card.title}</Typography>
-            </CardContent>
-            <AppReactApexCharts 
-                type='area'
-                height={80}
-                options={getSparklineConfig(card.color)}
-                series={[{ data: card.data?.trend || [0,0,0,0,0,0,0] }]}
-            />
-          </Card>
+          <StatsCard {...card} />
         </Grid>
       ))}
 
-      {/* Middle Section: Main Chart & Status */}
-      <Grid size={{ xs: 12, lg: 8 }}>
-        <Card sx={{ height: '100%', borderRadius: 3 }}>
-            <CardHeader 
-                title='Productivity Velocity' 
-                subheader='Cumulative team record (last 7 days)' 
-                action={
-                    <IconButton onClick={fetchData}><i className='tabler-refresh text-secondary' /></IconButton>
-                }
-            />
-            <CardContent sx={{ height: 'calc(100% - 70px)' }}>
-                <AppReactApexCharts 
-                    type='area'
-                    height={320}
-                    options={activityChartConfig}
-                    series={data?.charts?.activityTimeline?.series || []}
-                />
-            </CardContent>
-        </Card>
+      {/* Main Analytical Section */}
+      <Grid size={{ xs: 12 }}>
+        <PerformanceChart data={data?.charts?.activityTimeline} onRefresh={fetchData} />
       </Grid>
 
-      <Grid size={{ xs: 12, lg: 4 }}>
-        <Card sx={{ height: '100%', borderRadius: 3 }}>
-            <CardHeader title='Status Health' subheader='Current distribution' />
-            <CardContent sx={{ height: 'calc(100% - 70px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <AppReactApexCharts 
-                    type='donut'
-                    height={300}
-                    options={statusDonutConfig}
-                    series={data?.charts?.statusDistribution?.series || []}
-                />
-                {!data?.charts?.statusDistribution?.series?.length && (
-                    <Typography color='text.disabled' align='center' sx={{ my: 10 }}>No status data available yet.</Typography>
-                )}
-            </CardContent>
-        </Card>
-      </Grid>
-
-      {/* Bottom Section: Activity Feed & Workload */}
+      {/* Detailed Activity & Performance Feed */}
       <Grid size={{ xs: 12, md: 7 }}>
-        <Card sx={{ borderRadius: 3 }}>
-          <CardHeader title='Activity Timeline' subheader='Latest events from your workspace' />
-          <CardContent>
-            {data?.recentActivity?.map((activity, idx) => (
-                <Box key={idx} sx={{ 
-                    display: 'flex', gap: 4, mb: 6, 
-                    position: 'relative',
-                    '&:not(:last-child):after': {
-                        content: '""',
-                        position: 'absolute',
-                        left: 19, top: 40, bottom: -20,
-                        width: 2, bgcolor: theme.palette.divider
-                    }
-                }}>
-                    <Avatar sx={{ 
-                        width: 40, height: 40, 
-                        border: `2px solid ${theme.palette.background.paper}`,
-                        boxShadow: theme.shadows[2],
-                        bgcolor: theme.palette.primary.light,
-                        color: 'primary.contrastText',
-                        zIndex: 1
-                    }}>
-                        {activity.mUser?.userName?.charAt(0)}
-                    </Avatar>
-                    <Box sx={{ flexGrow: 1, bgcolor: 'action.hover', p: 4, borderRadius: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant='subtitle2' sx={{ fontWeight: 600 }}>{activity.mUser?.userName}</Typography>
-                            <Typography variant='caption'>{new Date(activity.dtmInserted).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Typography>
-                        </Box>
-                        <Typography variant='body2' color='text.secondary'>
-                            {activity.actionType.replace('_', ' ')}: <strong>{activity.task?.taskTitle}</strong>
-                        </Typography>
-                    </Box>
-                </Box>
-            ))}
-            {!data?.recentActivity?.length && (
-                <Typography variant='body2' color='text.disabled' className='text-center py-10'>No recent activities recorded.</Typography>
-            )}
-          </CardContent>
-        </Card>
+        <ActivityTimeline activities={data?.recentActivity} />
       </Grid>
 
       <Grid size={{ xs: 12, md: 5 }}>
         <Grid container spacing={6}>
             <Grid size={12}>
-                <Card sx={{ borderRadius: 3 }}>
-                    <CardHeader title='Team Performance' subheader='Member intensity index' />
+                <Card sx={{ 
+                    borderRadius: 4,
+                    background: 'rgba(255, 255, 255, 0.7)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)'
+                }}>
+                    <CardHeader title='Member Performance' subheader='Contribution Index' />
                     <CardContent>
                         {data?.charts?.workload?.map((member, idx) => (
                             <Box key={idx} sx={{ mb: 6 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                                    <Typography variant='subtitle2'>{member.name}</Typography>
-                                    <Typography variant='body2' color='text.secondary'>{member.activity} activities</Typography>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2.5, alignItems: 'center' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                                        <CustomAvatar skin='light' color={idx === 0 ? 'primary' : 'secondary'} size={32} sx={{ fontSize: '0.875rem', fontWeight: 700 }}>
+                                            {member.name?.charAt(0)}
+                                        </CustomAvatar>
+                                        <Typography variant='subtitle2' sx={{ fontWeight: 600 }}>{member.name}</Typography>
+                                    </Box>
+                                    <Typography variant='caption' sx={{ fontWeight: 700, color: 'text.primary' }}>{member.activity} pts</Typography>
                                 </Box>
                                 <LinearProgress 
                                     variant='determinate' 
                                     value={Math.min((member.activity / 15) * 100, 100)} 
                                     color={member.activity > 10 ? 'success' : member.activity > 5 ? 'primary' : 'warning'}
-                                    sx={{ height: 10, borderRadius: 5, bgcolor: 'action.hover' }}
+                                    sx={{ height: 10, borderRadius: 5, bgcolor: 'rgba(0,0,0,0.05)', '& .MuiLinearProgress-bar': { borderRadius: 5 } }}
                                 />
                             </Box>
                         ))}
                     </CardContent>
                 </Card>
             </Grid>
+            
             <Grid size={12}>
                 <Card sx={{ 
-                    bgcolor: 'error.light', 
-                    color: 'error.contrastText', 
-                    borderRadius: 3,
-                    border: `1px solid ${theme.palette.error.main}40`
+                    background: theme.palette.mode === 'light' 
+                        ? 'linear-gradient(135deg, #FF4D4D 0%, #B30000 100%)' 
+                        : 'linear-gradient(135deg, #B30000 0%, #660000 100%)',
+                    color: 'white', 
+                    borderRadius: 4,
+                    boxShadow: '0 8px 25px rgba(234, 84, 85, 0.3)',
+                    position: 'relative',
+                    overflow: 'hidden'
                 }}>
-                    <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <CustomAvatar skin='filled' color='error' variant='rounded' size={54} sx={{ boxShadow: theme.shadows[4] }}>
-                            <i className='tabler-alert-triangle text-3xl' />
+                    <Box sx={{ position: 'absolute', top: -20, right: -20, opacity: 0.1 }}>
+                        <i className='tabler-alert-triangle text-[120px]' />
+                    </Box>
+                    <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 6, py: 6 }}>
+                        <CustomAvatar skin='filled' color='white' variant='rounded' size={58} sx={{ boxShadow: '0 4px 15px rgba(0,0,0,0.2)', bgcolor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)' }}>
+                            <i className='tabler-flame text-3xl text-white' />
                         </CustomAvatar>
                         <Box>
-                            <Typography variant='h6' color='inherit' sx={{ fontWeight: 600 }}>{data?.stats?.urgentCount?.value} Urgent Priorities</Typography>
-                            <Typography variant='body2' color='inherit' sx={{ opacity: 0.85 }}>Critical items require your immediate oversight</Typography>
+                            <Typography variant='h4' color='inherit' sx={{ fontWeight: 800 }}>{data?.stats?.urgentCount?.value}</Typography>
+                            <Typography variant='h6' color='inherit' sx={{ fontWeight: 600, opacity: 0.9 }}>Critical Alerts</Typography>
+                            <Typography variant='body2' color='inherit' sx={{ opacity: 0.7 }}>Immediate intervention required</Typography>
                         </Box>
                     </CardContent>
                 </Card>
             </Grid>
         </Grid>
       </Grid>
+
+      {/* Global CSS for Animations */}
+      <style jsx global>{`
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(40, 199, 111, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(40, 199, 111, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(40, 199, 111, 0); }
+        }
+      `}</style>
     </Grid>
   )
 }
 
 const MonitoringHubPage = () => {
   return (
-    <Box sx={{ maxWidth: '1600px', margin: '0 auto', p: { xs: 0, sm: 2 } }}>
+    <Box sx={{ maxWidth: '1600px', margin: '0 auto', p: { xs: 0, sm: 2, md: 4 } }}>
         <MonitoringHub />
     </Box>
   )

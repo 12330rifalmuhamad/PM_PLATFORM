@@ -39,6 +39,12 @@ model User {
   dtmUpdated    DateTime?@updatedAt @map("dtmUpdated")
   txtUpdatedBy  String?  @map("txtUpdatedBy")
   bitActive     Int?     @default(1) @map("bitActive")
+  txtPhone      String?  @map("txtPhone")
+  txtBio        String?  @map("txtBio")
+  txtCompany    String?  @map("txtCompany")
+  txtJobTitle   String?  @map("txtJobTitle")
+  txtLocation   String?  @map("txtLocation")
+  txtImage      String?  @map("txtImage")
 
   // Relasi
   workspaceMember trWorkspaceMember[]

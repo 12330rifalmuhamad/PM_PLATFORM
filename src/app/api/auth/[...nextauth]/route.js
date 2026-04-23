@@ -45,9 +45,10 @@ export const authOptions = {
         console.log(`[AUTH] BERHASIL: Login berhasil untuk ${credentials.email}.`)
 
         return {
-          id: user.userId,
+          id: user.userId.toString(),
           name: user.userName,
-          email: user.email
+          email: user.email,
+          image: user.txtImage || null
         }
       }
     })
@@ -56,9 +57,21 @@ export const authOptions = {
     strategy: 'jwt'
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id
+        token.name = user.name
+        token.email = user.email
+        // Instead of storing the whole image, we store a flag or the URL
+        token.picture = user.image ? `/api/user/image?t=${Date.now()}` : null
+      }
+
+      // Handle session.update() from the client
+      if (trigger === 'update' && session?.user) {
+        token.name = session.user.name || token.name
+        token.email = session.user.email || token.email
+        // Force the URL with a timestamp to bust cache
+        token.picture = `/api/user/image?v=${Date.now()}`
       }
 
       return token
@@ -66,6 +79,9 @@ export const authOptions = {
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id
+        session.user.name = token.name
+        session.user.email = token.email
+        session.user.image = token.picture
       }
 
       return session

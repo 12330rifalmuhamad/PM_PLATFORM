@@ -26,7 +26,12 @@ export async function GET() {
         id: user.userId.toString(),
         name: user.userName,
         email: user.email,
-        image: session.user.image || null
+        phone: user.txtPhone || '',
+        bio: user.txtBio || '',
+        company: user.txtCompany || '',
+        jobTitle: user.txtJobTitle || '',
+        location: user.txtLocation || '',
+        image: user.txtImage || session.user.image || null
       }
     })
   } catch (error) {
@@ -44,13 +49,19 @@ export async function PUT(request) {
 
   try {
     const body = await request.json()
-    const { name } = body
+    const { name, phone, bio, company, jobTitle, location, image } = body
     const userId = BigInt(session.user.id)
 
     const updatedUser = await prisma.user.update({
       where: { userId },
       data: {
         userName: name || undefined,
+        txtPhone: phone || undefined,
+        txtBio: bio || undefined,
+        txtCompany: company || undefined,
+        txtJobTitle: jobTitle || undefined,
+        txtLocation: location || undefined,
+        txtImage: (image && image.startsWith('data:')) ? image : undefined,
         txtUpdatedBy: session.user.email,
       }
     })
@@ -61,6 +72,12 @@ export async function PUT(request) {
         id: updatedUser.userId.toString(),
         name: updatedUser.userName,
         email: updatedUser.email,
+        phone: updatedUser.txtPhone,
+        bio: updatedUser.txtBio,
+        company: updatedUser.txtCompany,
+        jobTitle: updatedUser.txtJobTitle,
+        location: updatedUser.txtLocation,
+        image: updatedUser.txtImage
       }
     })
   } catch (error) {

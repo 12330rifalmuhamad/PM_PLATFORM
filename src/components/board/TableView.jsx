@@ -1,8 +1,11 @@
-  'use client'
+'use client'
 
-  import React, { useState, useEffect, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import classNames from 'classnames'
 
-  import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+
+// Third-party Imports
 
   // DND Kit Imports
   import {
@@ -12,7 +15,8 @@
     PointerSensor,
     useSensor,
     useSensors,
-    DragOverlay
+    DragOverlay,
+    defaultDropAnimationSideEffects
   } from '@dnd-kit/core'
   import {
     arrayMove,
@@ -232,63 +236,48 @@
         return column.options.map(opt => ({
           label: opt.label,
           color: opt.color,
-          text: opt.color.includes('/10') || opt.color.includes('gray') ? 'text-gray-300' : 'text-white'
+          text: opt.color.includes('/10') || opt.color.includes('gray') ? 'text-gray-400' : 'text-white'
         }))
       }
 
-      if (column.columnName.toLowerCase() === 'prioritas') {
-        return [
-          { label: 'Tinggi', color: 'bg-purple-500/10', text: 'text-purple-400' },
-          { label: 'Medium', color: 'bg-sky-500/10', text: 'text-sky-400' },
-          { label: 'Rendah', color: 'bg-green-500/10', text: 'text-green-400' }
-        ]
-      }
-
+      // Default mapping for fallback or specific columns
       return [
         { label: 'Sedang Dikerjakan', color: 'bg-yellow-500', text: 'text-white' },
         { label: 'Buntu', color: 'bg-red-500', text: 'text-white' },
         { label: 'Selesai', color: 'bg-green-500', text: 'text-white' },
-        { label: 'Belum Mulai', color: 'bg-gray-500', text: 'text-white' }
+        { label: 'Belum Mulai', color: 'bg-gray-500', text: 'text-white' },
+        { label: 'Tinggi', color: 'bg-purple-500/10', text: 'text-purple-400' },
+        { label: 'Medium', color: 'bg-sky-500/10', text: 'text-sky-400' },
+        { label: 'Rendah', color: 'bg-green-500/10', text: 'text-green-400' }
       ]
     }, [column])
 
     const option = options.find(opt => opt.label === value)
-    const displayText = value || ''
-
-    if (column.columnName.toLowerCase() === 'prioritas') {
-      const colors = option ? `${option.color} ${option.text}` : 'text-gray-400 border border-divider'
-      
-      return (
-        <div className="flex items-center justify-center w-full h-full px-2">
-            <div
-            className={`flex items-center justify-center px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold shadow-sm ${colors} border border-transparent`}
-            style={option?.color.includes('/10') ? { 
-                backgroundColor: hexToRGBA(theme.palette.primary.main, 0.1),
-                color: theme.palette.primary.main
-            } : {}}
-            >
-            {displayText}
-            </div>
-        </div>
-      )
-    }
-
-    const colors = option ? `${option.color} ${option.text}` : 'bg-actionHover text-textPrimary'
-    const pillStyles = option ? { 
-        borderRadius: '20px',
-        margin: '4px 8px',
-        height: '24px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-    } : {}
+    const isPriority = column.columnName.toLowerCase() === 'prioritas'
+    const colorClass = option ? `${option.color} ${option.text}` : 'bg-actionHover text-textDisabled'
+    
+    if (!value) return (
+      <div className='w-full h-full flex items-center justify-center group/cell'>
+        <i className='tabler-plus text-textDisabled opacity-0 group-hover/cell:opacity-100 transition-opacity' />
+      </div>
+    )
 
     return (
-      <div className="flex items-center justify-center w-full h-full p-1">
-          <div 
-            className={`flex items-center justify-center w-full h-7 text-[11px] md:text-xs font-bold transition-transform hover:scale-[1.02] cursor-pointer ${colors}`}
-            style={pillStyles}
-          >
-            {displayText}
-          </div>
+      <div className='flex items-center justify-center w-full h-full p-1 lg:p-1.5'>
+        <div
+          className={classNames(
+            'flex items-center justify-center w-full h-full min-h-[26px] font-bold text-[10px] md:text-[11px] uppercase tracking-wide transition-all hover:brightness-110 shadow-sm px-2',
+            colorClass,
+            isPriority ? 'rounded-full' : 'rounded-md'
+          )}
+          style={{
+            boxShadow: option?.color?.includes('/10') ? 'none' : 'inset 0 -2px 0 rgba(0,0,0,0.12)',
+            border: option?.color?.includes('/10') ? '1px solid rgba(0,0,0,0.05)' : 'none',
+            textShadow: option?.text === 'text-white' ? '0 1px 1px rgba(0,0,0,0.1)' : 'none'
+          }}
+        >
+          <span className='truncate'>{value}</span>
+        </div>
       </div>
     )
   }
@@ -657,7 +646,7 @@
                       {/* Resize Handle */}
                       <div
                         className='absolute right-0 top-0 h-full w-3 cursor-col-resize hover:bg-primary/30 transition-colors z-50 touch-none after:content-[""] after:absolute after:right-0 after:top-0 after:w-[1px] after:h-full after:bg-divider group-hover:after:bg-primary'
-                        onPointerDown={e => {
+                        onMouseDown={e => {
                           const currentWidth = columnWidths[col.columnId] || col.width || 200
                           onColumnResizeStart(e, col.columnId, currentWidth)
                         }}
@@ -1372,6 +1361,7 @@
                     size="small"
                     placeholder="Quick add label..."
                     autoComplete="off"
+                    variant='standard'
                     value={quickAddLabel}
                     onChange={e => setQuickAddLabel(e.target.value)}
                     onKeyDown={async e => {
@@ -1384,21 +1374,23 @@
                             onClose();
                         }
                     }}
-                    InputProps={{
-                        disableUnderline: true,
-                        className: '!text-xs',
-                        endAdornment: quickAddLabel && (
-                            <InputAdornment position="end">
-                                <IconButton size="small" onClick={async () => {
-                                    const newLabelName = quickAddLabel.trim();
-                                    await handleQuickAdd();
-                                    onValueSelect(newLabelName);
-                                    onClose();
-                                }}>
-                                    <i className="tabler-plus text-xs" />
-                                </IconButton>
-                            </InputAdornment>
-                        )
+                    slotProps={{
+                        input: {
+                            disableUnderline: true,
+                            className: '!text-xs',
+                            endAdornment: quickAddLabel && (
+                                <InputAdornment position="end">
+                                    <IconButton size="small" onClick={async () => {
+                                        const newLabelName = quickAddLabel.trim();
+                                        await handleQuickAdd();
+                                        onValueSelect(newLabelName);
+                                        onClose();
+                                    }}>
+                                        <i className="tabler-plus text-xs" />
+                                    </IconButton>
+                                </InputAdornment>
+                            )
+                        }
                     }}
                 />
               </Box>
@@ -1482,6 +1474,16 @@
         }}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+        PaperProps={{
+            sx: {
+                borderRadius: 2,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                border: '1px solid',
+                borderColor: 'divider',
+                backdropFilter: 'blur(8px)',
+                bgcolor: 'background.paper'
+            }
+        }}
       >
         {renderEditor()}
         <ColorPalettePopover
@@ -1994,52 +1996,57 @@
     }
 
     // --- COLUMN RESIZING HANDLERS ---
-    const handleColumnResizeStart = (e, columnId, currentWidth) => {
-      e.preventDefault()
-      e.stopPropagation()
-      resizingRef.current = {
-        isResizing: true,
-        columnId,
-        startX: e.clientX,
-        startWidth: currentWidth || 150
-      }
-      document.addEventListener('pointermove', handleColumnResizeMove)
-      document.addEventListener('pointerup', handleColumnResizeEnd)
-    }
-
-    const handleColumnResizeMove = e => {
-      if (!resizingRef.current.isResizing) return
-
-      const { columnId, startX, startWidth } = resizingRef.current
-      const diff = e.clientX - startX
-      const newWidth = Math.max(50, startWidth + diff) // Min width 50
-
-      // Store for saving on mouseup
-      resizingRef.current.lastWidth = newWidth
-
-      setColumnWidths(prev => ({ ...prev, [columnId]: newWidth }))
-    }
-
-    const handleColumnResizeEnd = async () => {
-      const { columnId, lastWidth } = resizingRef.current
-
-      if (columnId && lastWidth) {
-        // Save to server
-        try {
-          await fetch(`/api/columns/${columnId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ width: lastWidth })
-          })
-        } catch (err) {
-          console.error('Failed to save column width:', err)
+    const handleColumnResizeStart = useCallback((e, columnId, currentWidth) => {
+        e.preventDefault()
+        e.stopPropagation()
+        
+        const startX = e.clientX
+        const startWidth = currentWidth || 200
+        
+        resizingRef.current = {
+          isResizing: true,
+          columnId,
+          startX,
+          startWidth,
+          lastWidth: startWidth
         }
-      }
-
-      resizingRef.current = { isResizing: false, columnId: null, startX: 0, startWidth: 0 }
-      document.removeEventListener('pointermove', handleColumnResizeMove)
-      document.removeEventListener('pointerup', handleColumnResizeEnd)
-    }
+        
+        document.body.style.cursor = 'col-resize'
+        
+        const onMouseMove = (moveEvent) => {
+            if (!resizingRef.current.isResizing) return
+            
+            const diff = moveEvent.clientX - resizingRef.current.startX
+            const newWidth = Math.max(50, resizingRef.current.startWidth + diff)
+            
+            resizingRef.current.lastWidth = newWidth
+            setColumnWidths(prev => ({ ...prev, [resizingRef.current.columnId]: newWidth }))
+        }
+        
+        const onMouseUp = async () => {
+            const { columnId, lastWidth } = resizingRef.current
+            
+            if (columnId && lastWidth) {
+                try {
+                    await fetch(`/api/columns/${columnId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ width: lastWidth })
+                    })
+                } catch (err) {
+                    console.error('Failed to save column width:', err)
+                }
+            }
+            
+            resizingRef.current = { isResizing: false, columnId: null, startX: 0, startWidth: 0, lastWidth: 0 }
+            document.body.style.cursor = ''
+            window.removeEventListener('mousemove', onMouseMove)
+            window.removeEventListener('mouseup', onMouseUp)
+        }
+        
+        window.addEventListener('mousemove', onMouseMove)
+        window.addEventListener('mouseup', onMouseUp)
+    }, [])
 
     const toggleGroupCollapse = async groupId => {
       const isCollapsing = !collapsedGroups.includes(groupId)
@@ -3149,7 +3156,7 @@
                 {isMainHeader && (
                   <div
                     className='absolute top-0 right-0 w-3 h-full cursor-col-resize hover:bg-primary/30 transition-colors z-30 touch-none after:content-[""] after:absolute after:right-0 after:top-0 after:w-[1.5px] after:h-full after:bg-divider group-hover:after:bg-primary'
-                    onPointerDown={e => handleColumnResizeStart(e, column.columnId, currentWidth)}
+                    onMouseDown={e => handleColumnResizeStart(e, column.columnId, currentWidth)}
                   />
                 )}
               </th>
@@ -3293,9 +3300,9 @@
                     <React.Fragment>
                   <tr className='bg-backgroundPaper border-b border-divider group/row'>
                     <td
-                      className='p-3 font-bold text-textPrimary sticky left-0 z-[50] bg-backgroundPaper border-r border-divider shadow-[2px_0_5px_rgba(0,0,0,0.05)]'
+                      className='p-3 font-bold text-textPrimary sticky left-0 z-[50] border-r border-divider shadow-[4px_0_10px_-4px_rgba(0,0,0,0.1)]'
                       style={{
-                        borderLeft: `5px solid ${group.groupColor}`,
+                        borderLeft: `6px solid ${group.groupColor}`,
                         width:
                           columnWidths[visibleColumns.find(c => c.columnName.toLowerCase() === 'item')?.columnId] ||
                           visibleColumns.find(c => c.columnName.toLowerCase() === 'item')?.width ||
@@ -3308,7 +3315,8 @@
                           columnWidths[visibleColumns.find(c => c.columnName.toLowerCase() === 'item')?.columnId] ||
                           visibleColumns.find(c => c.columnName.toLowerCase() === 'item')?.width ||
                           200,
-                        backgroundColor: 'var(--mui-palette-background-paper)'
+                        backgroundColor: hexToRGBA(group.groupColor, 0.05),
+                        backdropFilter: 'blur(10px)',
                       }}
                     >
                       <div className='flex items-center gap-3'>
@@ -3346,7 +3354,9 @@
                               onKeyDown={e =>
                                 e.key === 'Enter' && handleUpdateGroupName(group.groupId, editingGroupName.currentName)
                               }
-                              InputProps={{ disableUnderline: true, className: '!text-textPrimary !font-bold !text-lg' }}
+                              slotProps={{
+                                input: { disableUnderline: true, className: '!text-textPrimary !font-bold !text-lg' }
+                              }}
                             />
                           ) : (
                             <Typography
@@ -3617,9 +3627,11 @@
                                             e.key === 'Enter' &&
                                             handleUpdateTaskTitle(item.taskId, editingTaskName.currentName)
                                           }
-                                          InputProps={{
-                                            disableUnderline: true,
-                                            className: '!text-textPrimary !font-semibold'
+                                          slotProps={{
+                                            input: {
+                                              disableUnderline: true,
+                                              className: '!text-textPrimary !font-semibold'
+                                            }
                                           }}
                                           onClick={e => e.stopPropagation()}
                                         />
@@ -3643,7 +3655,7 @@
                                             e.stopPropagation(); handleSaveTextValue(); 
                                         }
                                       }}
-                                      InputProps={{ disableUnderline: true, className: '!text-textPrimary' }}
+                                      slotProps={{ input: { disableUnderline: true, className: '!text-textPrimary' } }}
                                       onClick={e => e.stopPropagation()}
                                     />
                                   ) : isItemColumn ? (
@@ -3714,7 +3726,7 @@
                               onBlur={() => handleCreateTask(group.groupId)}
                               onKeyDown={e => e.key === 'Enter' && handleCreateTask(group.groupId)}
                               placeholder='Type item name and press Enter...'
-                              InputProps={{ disableUnderline: true, className: '!text-textPrimary !text-sm' }}
+                              slotProps={{ input: { disableUnderline: true, className: '!text-textPrimary !text-sm' } }}
                           />
                           ) : (
                           <Typography
@@ -3777,12 +3789,12 @@
                         return (
                           <td
                             key={`footer-${column.columnId}`}
-                            className={`p-2 border-r border-divider text-center ${isItemColumn ? 'sticky left-0 z-[45] bg-backgroundPaper border-r-2 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.1)]' : ''}`}
+                            className={`p-2 border-r border-divider text-center ${isItemColumn ? 'sticky left-0 z-[45] bg-backgroundPaper border-r-2 shadow-[4px_0_10px_-4px_rgba(0,0,0,0.1)]' : ''}`}
                             style={{
                               width: columnWidths[column.columnId] || column.width || 200,
                               minWidth: columnWidths[column.columnId] || column.width || 200,
                               maxWidth: columnWidths[column.columnId] || column.width || 200,
-                              backgroundColor: isItemColumn ? 'var(--mui-palette-background-paper)' : undefined,
+                              backgroundColor: isItemColumn ? 'var(--mui-palette-background-paper)' : hexToRGBA(group.groupColor, 0.02),
                               zIndex: isItemColumn ? 45 : 'auto'
                             }}
                           >
