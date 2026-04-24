@@ -8,22 +8,27 @@ import { useParams, useRouter, usePathname } from 'next/navigation'
 
 // MUI Imports
 import IconButton from '@mui/material/IconButton'
+import Typography from '@mui/material/Typography'
 
 // Third-party Imports
 import classnames from 'classnames'
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from 'cmdk'
 import { Title, Description } from '@radix-ui/react-dialog'
+import { toast } from 'react-toastify'
 
 // Component Imports
 import DefaultSuggestions from './DefaultSuggestions'
 import NoResult from './NoResult'
 
 // Hook Imports
+import useSWR from 'swr'
 import useVerticalNav from '@menu/hooks/useVerticalNav'
 import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
+
+const fetcher = url => fetch(url).then(res => res.json())
 
 // Style Imports
 import './styles.css'
@@ -116,6 +121,7 @@ const NavSearch = () => {
   // States
   const [open, setOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
 
   // Hooks
   const router = useRouter()
@@ -124,11 +130,27 @@ const NavSearch = () => {
   const { lang: locale } = useParams()
   const { isBreakpointReached } = useVerticalNav()
 
+  // Debounce search value
+  useEffect(() => {
+    const timer = setTimeout(() => {
+        setDebouncedSearch(searchValue)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchValue])
+
+  // Fetch dynamic results
+  const { data: dynamicData, isLoading } = useSWR(
+    debouncedSearch.length >= 2 ? `/api/search?q=${encodeURIComponent(debouncedSearch)}` : null,
+    fetcher
+  )
+
   // When an item is selected from the search results
   const onSearchItemSelect = item => {
-    item.url.startsWith('http')
-      ? window.open(item.url, '_blank')
-      : router.push(item.excludeLang ? item.url : getLocalizedUrl(item.url, locale))
+    if (item.url) {
+        item.url.startsWith('http')
+        ? window.open(item.url, '_blank')
+        : router.push(item.excludeLang ? item.url : getLocalizedUrl(item.url, locale))
+    }
     setOpen(false)
   }
 
@@ -208,31 +230,103 @@ const NavSearch = () => {
         </div>
         <CommandList>
           {searchValue ? (
-            limitedData.length > 0 ? (
-              limitedData.map((section, index) => (
-                <CommandGroup key={index} heading={section.title.toUpperCase()} className='text-xs'>
-                  {section.items.map((item, index) => {
-                    return (
-                      <SearchItem
-                        shortcut={item.shortcut}
-                        key={index}
-                        currentPath={pathName}
-                        url={getLocalizedUrl(item.url, locale)}
-                        value={`${item.name} ${section.title} ${item.shortcut}`}
-                        onSelect={() => onSearchItemSelect(item)}
-                      >
-                        {item.icon && <i className={classnames('text-xl', item.icon)} />}
-                        {item.name}
-                      </SearchItem>
-                    )
-                  })}
+            <>
+              {isLoading && (
+                  <div className='p-4 text-center text-textDisabled flex items-center justify-center gap-2'>
+                       <i className='tabler-loader animate-spin' /> Searching...
+                  </div>
+              )}
+
+              {/* Dynamic Results: Boards */}
+              {dynamicData?.boards?.length > 0 && (
+                <CommandGroup heading='BOARDS'>
+                  {dynamicData.boards.map((board) => (
+                    <SearchItem
+                      key={`board-${board.boardId}`}
+                      currentPath={pathName}
+                      url={`/apps/kanban`} // Or a specific board URL if available
+                      value={`${board.boardName} board`}
+                      onSelect={() => onSearchItemSelect({ url: '/apps/kanban' })}
+                    >
+                      <i className='tabler-layout-board text-xl text-info' />
+                      <Typography variant='body2' color='text.primary'>{board.boardName}</Typography>
+                    </SearchItem>
+                  ))}
                 </CommandGroup>
-              ))
-            ) : (
-              <CommandEmpty>
-                <NoResult searchValue={searchValue} setOpen={setOpen} />
-              </CommandEmpty>
-            )
+              )}
+
+              {/* Dynamic Results: Tasks */}
+              {dynamicData?.tasks?.length > 0 && (
+                <CommandGroup heading='TASKS'>
+                  {dynamicData.tasks.map((task) => (
+                    <SearchItem
+                      key={`task-${task.taskId}`}
+                      currentPath={pathName}
+                      url={`/apps/kanban`}
+                      value={`${task.taskTitle} task`}
+                      onSelect={() => onSearchItemSelect({ url: '/apps/kanban' })}
+                    >
+                      <i className='tabler-square-check text-xl text-primary' />
+                      <div className='flex flex-col'>
+                        <Typography variant='body2' color='text.primary'>{task.taskTitle}</Typography>
+                        <Typography variant='caption'>{task.group?.board?.boardName} > {task.group?.groupName}</Typography>
+                      </div>
+                    </SearchItem>
+                  ))}
+                </CommandGroup>
+              )}
+
+              {/* Dynamic Results: Notes */}
+              {dynamicData?.notes?.length > 0 && (
+                <CommandGroup heading='NOTES'>
+                  {dynamicData.notes.map((note) => (
+                    <SearchItem
+                      key={`note-${note.noteId}`}
+                      currentPath={pathName}
+                      url='#'
+                      value={`${note.content} note`}
+                      onSelect={() => {
+                        // Custom logic to open notes widget could go here
+                        toast.info('Quick Note found. Open the widget to view.')
+                        setOpen(false)
+                      }}
+                    >
+                      <i className='tabler-notes text-xl text-warning' />
+                      <Typography variant='body2' noWrap>{note.content.replace(/<[^>]*>/g, '')}</Typography>
+                    </SearchItem>
+                  ))}
+                </CommandGroup>
+              )}
+
+              {/* Static Nav Results */}
+              {limitedData.length > 0 ? (
+                limitedData.map((section, index) => (
+                  <CommandGroup key={index} heading={section.title.toUpperCase()} className='text-xs'>
+                    {section.items.map((item, index) => {
+                      return (
+                        <SearchItem
+                          shortcut={item.shortcut}
+                          key={index}
+                          currentPath={pathName}
+                          url={getLocalizedUrl(item.url, locale)}
+                          value={`${item.name} ${section.title} ${item.shortcut}`}
+                          onSelect={() => onSearchItemSelect(item)}
+                        >
+                          {item.icon && <i className={classnames('text-xl', item.icon)} />}
+                          {item.name}
+                        </SearchItem>
+                      )
+                    })}
+                  </CommandGroup>
+                ))
+              ) : (
+                !isLoading && !dynamicData?.tasks?.length && !dynamicData?.notes?.length && (
+                  <CommandEmpty>
+                    <NoResult searchValue={searchValue} setOpen={setOpen} />
+                  </CommandEmpty>
+                )
+              )}
+            </>
           ) : (
             <DefaultSuggestions setOpen={setOpen} />
           )}

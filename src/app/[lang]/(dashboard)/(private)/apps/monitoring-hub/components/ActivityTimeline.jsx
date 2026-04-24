@@ -79,10 +79,12 @@ const ActivityTimeline = ({ activities }) => {
                         </Typography>
                     </Box>
                     <Typography variant='body2' sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
-                        {activity.actionType.replace(/_/g, ' ').toLowerCase()}
-                        <Box component='span' sx={{ fontWeight: 600, color: 'primary.main', ml: 1 }}>
-                            "{activity.task?.taskTitle}"
-                        </Box>
+                        {activity.description || activity.actionType.replace(/_/g, ' ').toLowerCase()}
+                        {activity.task?.taskTitle && !activity.description && (
+                            <Box component='span' sx={{ fontWeight: 600, color: 'primary.main', ml: 1 }}>
+                                "{activity.task?.taskTitle}"
+                            </Box>
+                        )}
                     </Typography>
                 </Box>
             </Box>

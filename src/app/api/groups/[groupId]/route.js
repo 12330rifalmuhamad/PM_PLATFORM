@@ -18,7 +18,7 @@ export async function PATCH(request, { params }) {
   if (!session) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
   try {
-    const { groupId } = params
+    const { groupId } = await params
     const body = await request.json()
 
     const updatedGroup = await prisma.group.update({
@@ -39,7 +39,7 @@ export async function DELETE(request, { params }) {
   if (!session) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
   try {
-    const { groupId } = params
+    const { groupId } = await params
 
     await prisma.group.delete({
       where: { groupId: parseInt(groupId) }

@@ -24,6 +24,12 @@ import StatsCard from './components/StatsCard'
 import ActivityTimeline from './components/ActivityTimeline'
 import PerformanceChart from './components/PerformanceChart'
 
+// Third-party Imports
+import * as XLSX from 'xlsx'
+import Button from '@mui/material/Button'
+import Menu from '@mui/material/Menu'
+import MenuItem from '@mui/material/MenuItem'
+
 const MonitoringHub = () => {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -31,6 +37,49 @@ const MonitoringHub = () => {
   
   const theme = useTheme()
   const { data: session } = useSession()
+
+  // Export States
+  const [anchorEl, setAnchorEl] = useState(null)
+  const openMenu = Boolean(anchorEl)
+
+  const handleExportClick = (event) => setAnchorEl(event.currentTarget)
+  const handleExportClose = () => setAnchorEl(null)
+
+  const exportToExcel = () => {
+    if (!data) return
+    handleExportClose()
+
+    // 1. Prepare Stats Sheet
+    const statsData = [
+      { Metric: 'Active Tasks', Value: data.stats.activeTasks.value },
+      { Metric: 'Unread Chats', Value: data.stats.chatRooms.value },
+      { Metric: 'Quick Notes', Value: data.stats.notes.value },
+      { Metric: 'Urgent Alerts', Value: data.stats.urgentCount.value }
+    ]
+
+    // 2. Prepare Activity Sheet
+    const activityData = data.recentActivity.map(act => ({
+      Time: new Date(act.dtmInserted).toLocaleString(),
+      User: act.mUser?.userName,
+      Action: act.actionType,
+      Description: act.description
+    }))
+
+    // 3. Prepare Workload Sheet
+    const workloadData = data.charts.workload.map(m => ({
+        Member: m.name,
+        ActivityScore: m.activity
+    }))
+
+    // Create Workbook
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(statsData), 'Snapshot')
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(workloadData), 'Workload')
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(activityData), 'Recent Timeline')
+
+    // Save
+    XLSX.writeFile(wb, `Monitoring_Report_${new Date().toISOString().split('T')[0]}.xlsx`)
+  }
 
   const fetchData = useCallback(() => {
     setLoading(true)
@@ -137,11 +186,11 @@ const MonitoringHub = () => {
           <CardContent sx={{ p: { xs: 6, md: 12 }, position: 'relative' }}>
             <Grid container spacing={6} alignItems='center'>
                 <Grid size={{ xs: 12, md: 8 }}>
-                    <Typography variant='h2' color='inherit' sx={{ mb: 2, fontWeight: 800, letterSpacing: '-1.5px', textShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+                    <Typography variant='h2' sx={{ color: '#FFFFFF !important', mb: 2, fontWeight: 800, letterSpacing: '-1.5px', textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
                         Good {!currentTime ? 'Day' : currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 18 ? 'Afternoon' : 'Evening'}, {session?.user?.name || 'Rifal'}!
                     </Typography>
-                    <Typography variant='h6' color='inherit' sx={{ opacity: 0.85, mb: 8, display: 'flex', alignItems: 'center', gap: 3, fontWeight: 400 }}>
-                        <i className='tabler-calendar-event text-2xl' />
+                    <Typography variant='h6' sx={{ color: '#FFFFFF !important', opacity: 0.9, mb: 8, display: 'flex', alignItems: 'center', gap: 3, fontWeight: 400 }}>
+                        <i className='tabler-calendar-event text-2xl text-white' />
                         {currentTime ? currentTime.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '--'}
                     </Typography>
                     
@@ -160,7 +209,7 @@ const MonitoringHub = () => {
                                 boxShadow: '0 0 15px #28C76F',
                                 animation: 'pulse 2s infinite'
                             }} />
-                            <Typography color='inherit' variant='body1' sx={{ fontWeight: 600 }}>Command Center: Active</Typography>
+                             <Typography variant='body1' sx={{ color: '#FFFFFF !important', fontWeight: 600 }}>Command Center: Active</Typography>
                         </Box>
                         
                         <Box sx={{ 
@@ -172,11 +221,46 @@ const MonitoringHub = () => {
                             display: 'flex', alignItems: 'center', gap: 3,
                             boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
                         }}>
-                            <i className='tabler-clock text-xl' />
-                            <Typography color='inherit' variant='h5' sx={{ fontWeight: 700, letterSpacing: '1px' }}>
+                            <i className='tabler-clock text-xl text-white' />
+                            <Typography variant='h5' sx={{ color: '#FFFFFF !important', fontWeight: 700, letterSpacing: '1px' }}>
                                 {currentTime ? currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--'}
                             </Typography>
                         </Box>
+                        
+                        <Button
+                            variant='contained'
+                            color='white'
+                            id='export-button'
+                            aria-controls={openMenu ? 'export-menu' : undefined}
+                            aria-haspopup='true'
+                            aria-expanded={openMenu ? 'true' : undefined}
+                            onClick={handleExportClick}
+                            startIcon={<i className='tabler-download' />}
+                            sx={{ 
+                                bgcolor: 'rgba(255,255,255,0.9)', 
+                                color: 'primary.main',
+                                borderRadius: '12px',
+                                fontWeight: 700,
+                                px: 6,
+                                '&:hover': { bgcolor: 'white' }
+                            }}
+                        >
+                            Export Analysis
+                        </Button>
+                        <Menu
+                            id='export-menu'
+                            anchorEl={anchorEl}
+                            open={openMenu}
+                            onClose={handleExportClose}
+                            MenuListProps={{ 'aria-labelledby': 'export-button' }}
+                        >
+                            <MenuItem onClick={exportToExcel}>
+                                <i className='tabler-file-spreadsheet me-2' /> Excel (.xlsx)
+                            </MenuItem>
+                            <MenuItem onClick={() => { window.print(); handleExportClose(); }}>
+                                <i className='tabler-file-type-pdf me-2' /> Print to PDF
+                            </MenuItem>
+                        </Menu>
                     </Box>
                 </Grid>
                 <Grid size={{ xs: 0, md: 4 }} sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'flex-end' }}>

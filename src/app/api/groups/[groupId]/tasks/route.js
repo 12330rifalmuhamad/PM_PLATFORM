@@ -16,7 +16,7 @@ export async function POST(request, { params }) {
   // Session is optional in this endpoint; default to 'system' when absent
   const session = await getServerSession(authOptions).catch(() => null)
 
-  const { groupId } = params
+  const { groupId } = await params
 
   try {
     const body = await request.json()

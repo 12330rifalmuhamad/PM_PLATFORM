@@ -46,13 +46,20 @@ export async function GET() {
           participants: { some: { userId: userId } }
         }
       }),
-      // 3. Recent activity logs
+      // 3. Recent activity logs (Unified for Tasks and Notes)
       prisma.logTaskActivity.findMany({
         where: {
           bitActive: 1,
-          task: { group: { board: { boardMember: { some: { userId: userId } } } } }
+          OR: [
+            { userId: userId }, // Personal activities (includes notes)
+            { 
+              task: { 
+                group: { board: { boardMember: { some: { userId: userId } } } } 
+              } 
+            } // Activities on boards I belong to
+          ]
         },
-        take: 8,
+        take: 12,
         orderBy: { dtmInserted: 'desc' },
         include: {
           task: { select: { taskTitle: true } },

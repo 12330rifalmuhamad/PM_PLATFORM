@@ -18,7 +18,7 @@ export async function PATCH(request, { params }) {
   if (!session) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
   try {
-    const { taskId } = params
+    const { taskId } = await params
     const body = await request.json()
 
     const updatedTask = await prisma.task.update({
@@ -39,7 +39,7 @@ export async function DELETE(request, { params }) {
   if (!session) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
   try {
-    const { taskId } = params
+    const { taskId } = await params
 
     await prisma.task.delete({ where: { taskId: parseInt(taskId) } })
 

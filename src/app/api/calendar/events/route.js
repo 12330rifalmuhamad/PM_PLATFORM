@@ -49,7 +49,7 @@ export async function GET() {
 
       // Menentukan Calendar Color (Misal dari Group Color atau bawaan)
       // Tersedia: Personal, Business, Family, Holiday, ETC
-      const calendar = 'Business' 
+      const calendar = 'Tasks' 
 
       return {
         id: taskId.toString(),

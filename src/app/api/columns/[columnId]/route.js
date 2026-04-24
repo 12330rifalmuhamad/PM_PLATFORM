@@ -16,7 +16,7 @@ export async function POST(request, { params }) {
 
   if (!session) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
-  const { boardId } = params
+  const { boardId } = await params
 
   try {
     const body = await request.json()
@@ -65,7 +65,7 @@ export async function PUT(request, { params }) {
 
   if (!session) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
-  const { columnId } = params
+  const { columnId } = await params
 
   try {
     const body = await request.json()
@@ -96,7 +96,7 @@ export async function DELETE(request, { params }) {
 
   if (!session) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
-  const { columnId } = params
+  const { columnId } = await params
 
   try {
     const id = parseInt(columnId)

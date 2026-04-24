@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import prisma from '@/libs/prisma'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { logActivity } from '@/libs/activityLogger'
 
 // Helper to serialize BigInt in objects/arrays
 const serialize = (data) => {
@@ -18,13 +19,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const userId = BigInt(session.user.id)
+
     if (!prisma.quickNote) {
       throw new Error('Prisma Client is out of sync. Please run "npx prisma generate".')
     }
 
     const notes = await prisma.quickNote.findMany({
       where: {
-        userId: userId,
+        userId,
         bitActive: 1
       },
       orderBy: [
@@ -67,6 +70,13 @@ export async function POST(req) {
           dtmUpdated: new Date()
         }
       })
+
+      await logActivity({
+        userId,
+        actionType: 'UPDATE_NOTE',
+        description: `Updated note: ${content.replace(/<[^>]*>/g, '').substring(0, 30)}...`
+      })
+
       return NextResponse.json(serialize(updatedNote))
     } else {
       // Create
@@ -79,6 +89,13 @@ export async function POST(req) {
           isPinned: isPinned || false
         }
       })
+
+      await logActivity({
+        userId,
+        actionType: 'CREATE_NOTE',
+        description: `Created a new note: ${content.replace(/<[^>]*>/g, '').substring(0, 30)}...`
+      })
+
       return NextResponse.json(serialize(newNote))
     }
   } catch (error) {
@@ -105,6 +122,13 @@ export async function DELETE(req) {
     await prisma.quickNote.update({
       where: { noteId: BigInt(noteId) },
       data: { bitActive: 0 }
+    })
+
+    // Log the activity
+    await logActivity({
+      userId: BigInt(session.user.id),
+      actionType: 'DELETE_NOTE',
+      description: `Deleted note ID: ${noteId}`
     })
 
     return NextResponse.json({ success: true })

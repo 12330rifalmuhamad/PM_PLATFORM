@@ -56,6 +56,7 @@ model User {
   chatMessages    ChatMessage[]
   sentMessages    InternalMessage[] @relation("SentMessages")
   receivedMessages InternalMessage[] @relation("ReceivedMessages")
+  sharedNotes     trSharedNote[]
 
   @@map("mUser")
 }
@@ -139,7 +140,25 @@ model QuickNote {
   dtmUpdated    DateTime? @updatedAt @map("dtmUpdated")
   bitActive     Int?      @default(1) @map("bitActive")
 
+  // Relasi
+  sharedWith    trSharedNote[]
+
   @@map("trQuickNote")
+}
+
+model trSharedNote {
+  sharedNoteId  BigInt   @id @default(autoincrement()) @map("intSharedNote_ID")
+  noteId        BigInt   @map("intNote_ID")
+  userId        BigInt   @map("intUser_ID")
+  canEdit       Boolean  @default(false) @map("bitCanEdit")
+  dtmInserted   DateTime @default(now()) @map("dtmInserted")
+
+  // Relasi
+  note QuickNote @relation(fields: [noteId], references: [noteId], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([noteId, userId])
+  @@map("trSharedNote")
 }
 
 model BoardColumn {
@@ -321,7 +340,7 @@ model trTaskUpdate {
 
 model logTaskActivity {
   logId         BigInt    @id @default(autoincrement()) @map("intLog_ID")
-  taskId        BigInt    @map("intTask_ID")
+  taskId        BigInt?   @map("intTask_ID")
   userId        BigInt    @map("intUser_ID")
   actionType    String    @map("txtActionType")
   oldValue      String?   @map("txtOldValue")
@@ -334,7 +353,7 @@ model logTaskActivity {
   bitActive     Int?      @default(1) @map("bitActive")
 
   // Relasi
-  task  Task @relation(fields: [taskId], references: [taskId], onDelete: Cascade)
+  task  Task? @relation(fields: [taskId], references: [taskId], onDelete: Cascade)
   mUser User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@map("logTaskActivity")

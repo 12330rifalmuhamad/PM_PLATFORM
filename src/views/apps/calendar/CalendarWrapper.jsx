@@ -23,7 +23,8 @@ const calendarsColor = {
   Business: 'primary',
   Family: 'warning',
   Holiday: 'success',
-  ETC: 'info'
+  Tasks: 'info',
+  ETC: 'secondary'
 }
 
 const AppCalendar = () => {

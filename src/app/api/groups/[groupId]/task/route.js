@@ -16,7 +16,7 @@ export async function POST(request, { params }) {
 
   if (!session) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
-  const { groupId } = params
+  const { groupId } = await params
 
   try {
     const body = await request.json()
