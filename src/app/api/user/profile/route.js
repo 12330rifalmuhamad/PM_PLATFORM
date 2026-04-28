@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import prisma from '@/libs/prisma'
+import { v2 as cloudinary } from 'cloudinary'
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+})
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -52,6 +59,19 @@ export async function PUT(request) {
     const { name, phone, bio, company, jobTitle, location, image } = body
     const userId = BigInt(session.user.id)
 
+    let uploadedImageUrl = undefined
+    if (image && image.startsWith('data:')) {
+      try {
+        const uploadResult = await cloudinary.uploader.upload(image, {
+          folder: 'vuexy-pmp/profiles',
+        })
+        uploadedImageUrl = uploadResult.secure_url
+      } catch (err) {
+        console.error('Failed to upload profile image to Cloudinary:', err)
+        return NextResponse.json({ message: 'Failed to upload image' }, { status: 500 })
+      }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { userId },
       data: {
@@ -61,7 +81,7 @@ export async function PUT(request) {
         txtCompany: company || undefined,
         txtJobTitle: jobTitle || undefined,
         txtLocation: location || undefined,
-        txtImage: (image && image.startsWith('data:')) ? image : undefined,
+        txtImage: uploadedImageUrl || undefined,
         txtUpdatedBy: session.user.email,
       }
     })

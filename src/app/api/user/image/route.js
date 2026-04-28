@@ -17,9 +17,13 @@ export async function GET() {
       select: { txtImage: true }
     })
 
-    if (!user?.txtImage || !user.txtImage.startsWith('data:')) {
+    if (!user?.txtImage) {
       // Return a default transparent pixel or a default avatar if you have one
       return new Response('', { status: 404 })
+    }
+
+    if (user.txtImage.startsWith('http://') || user.txtImage.startsWith('https://')) {
+      return NextResponse.redirect(user.txtImage)
     }
 
     // Extract content type and base64 data

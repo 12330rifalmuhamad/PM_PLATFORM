@@ -57,6 +57,7 @@
     "bcryptjs": "^3.0.2",
     "bootstrap-icons": "1.11.3",
     "classnames": "2.5.1",
+    "cloudinary": "^2.10.0",
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
     "dhtmlx-gantt": "^9.0.14",
