@@ -158,7 +158,7 @@ Semangat mengerjakan!
               for (const rec of recipients) {
                 if (rec.email) {
                   const emailSubject = `📋 Penugasan Tugas Baru: "${taskExists.taskTitle}"`
-                  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+                  const appUrl = process.env.NEXT_PUBLIC_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
                   const linkUrl = `${appUrl}/board/${taskExists.group?.board?.boardId}`
                   
                   const emailHtml = `
