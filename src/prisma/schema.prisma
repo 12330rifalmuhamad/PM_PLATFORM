@@ -503,3 +503,26 @@ model InternalMessage {
 
   @@map("trInternalMessage")
 }
+// =============================================================================
+// CALENDAR MODELS
+// =============================================================================
+
+model CalendarEvent {
+  eventId       BigInt    @id @default(autoincrement()) @map("intEvent_ID")
+  title         String    @map("txtTitle")
+  startDate     DateTime  @map("dtmStart")
+  endDate       DateTime  @map("dtmEnd")
+  allDay        Boolean   @default(false) @map("bitAllDay")
+  url           String?   @map("txtUrl")
+  calendar      String    @default("ETC") @map("txtCalendar") // Personal, Business, Family, Holiday, Tasks, ETC
+  description   String?   @map("txtDescription")
+  location      String?   @map("txtLocation")
+  
+  dtmInserted   DateTime  @default(now()) @map("dtmInserted")
+  txtInsertedBy String?   @map("txtInsertedBy")
+  dtmUpdated    DateTime? @updatedAt @map("dtmUpdated")
+  txtUpdatedBy  String?   @map("txtUpdatedBy")
+  bitActive     Int?      @default(1) @map("bitActive")
+
+  @@map("trCalendarEvent")
+}

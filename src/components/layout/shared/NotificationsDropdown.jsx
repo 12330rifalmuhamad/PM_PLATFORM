@@ -4,7 +4,7 @@
 import { useRef, useState, useEffect } from 'react'
 
 // Next Imports
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 
 // MUI Imports
 import IconButton from '@mui/material/IconButton'
@@ -36,6 +36,7 @@ import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
+import { getLocalizedUrl } from '@/utils/i18n'
 
 const ScrollWrapper = ({ children, hidden }) => {
   if (hidden) {
@@ -89,6 +90,7 @@ const NotificationDropdown = ({ notifications, onRefresh }) => {
 
   // Hooks
   const router = useRouter()
+  const { lang: locale } = useParams()
   const hidden = useMediaQuery(theme => theme.breakpoints.down('lg'))
   const isSmallScreen = useMediaQuery(theme => theme.breakpoints.down('sm'))
   const { settings } = useSettings()
@@ -106,9 +108,17 @@ const NotificationDropdown = ({ notifications, onRefresh }) => {
     event.stopPropagation()
     const notification = notificationsState[index]
 
+    const getCleanLink = (link) => {
+      if (!link) return ''
+      if (link.startsWith('/apps/board/')) {
+        return link.replace('/apps/board/', '/board/')
+      }
+      return link
+    }
+
     if (notification.read === value) {
       if (notification.link) {
-        router.push(notification.link)
+        router.push(getLocalizedUrl(getCleanLink(notification.link), locale))
         setOpen(false)
       }
       return
@@ -129,7 +139,7 @@ const NotificationDropdown = ({ notifications, onRefresh }) => {
       if (onRefresh) onRefresh()
 
       if (notification.link && value === true) {
-        router.push(notification.link)
+        router.push(getLocalizedUrl(getCleanLink(notification.link), locale))
         setOpen(false)
       }
     } catch (error) {

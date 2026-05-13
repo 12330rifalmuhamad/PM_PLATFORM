@@ -1,18 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 import {
   Popover,
   List,
   ListItemButton,
   ListItemText,
+  ListItemIcon,
+  Checkbox,
   TextField,
   Box,
   Typography,
   Button,
   Divider,
-  InputAdornment
+  InputAdornment,
+  Avatar
 } from '@mui/material'
 
 export const ValueEditorPopover = ({ anchorEl, onClose, column, board, onValueSelect }) => {
@@ -20,6 +23,34 @@ export const ValueEditorPopover = ({ anchorEl, onClose, column, board, onValueSe
 
   // State untuk mengontrol tampilan (pilih vs edit label)
   const [isEditingLabels, setIsEditingLabels] = useState(false)
+
+  // State untuk PERSON assignment
+  const [personSearch, setPersonSearch] = useState('')
+  const [selectedPersons, setSelectedPersons] = useState([])
+
+  useEffect(() => {
+    if (open && column?.columnType === 'PERSON') {
+      try {
+        if (!column.currentValue) {
+          setSelectedPersons([])
+        } else if (typeof column.currentValue === 'string' && column.currentValue.startsWith('[')) {
+          setSelectedPersons(JSON.parse(column.currentValue))
+        } else {
+          setSelectedPersons([column.currentValue])
+        }
+      } catch (e) {
+        setSelectedPersons([column.currentValue])
+      }
+      setPersonSearch('')
+    }
+  }, [open, column])
+
+  const filteredMembers = useMemo(() => {
+    if (!board?.boardMember) return []
+    return board.boardMember.filter(m => 
+      m.mUser.userName.toLowerCase().includes(personSearch.toLowerCase())
+    )
+  }, [board?.boardMember, personSearch])
 
   // Definisikan opsi-opsi. Di masa depan, ini bisa diambil dari API.
   const [statusOptions, setStatusOptions] = useState([
@@ -154,19 +185,85 @@ export const ValueEditorPopover = ({ anchorEl, onClose, column, board, onValueSe
 
       case 'PERSON':
         return (
-          <List>
-            {board.boardMember.map(member => (
-              <ListItemButton
-                key={member.userId}
+          <Box className='p-2 flex flex-col gap-2' sx={{ width: 250, maxHeight: 400 }}>
+            <TextField
+              size="small"
+              placeholder="Search people..."
+              value={personSearch}
+              onChange={e => setPersonSearch(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <i className='tabler-search text-sm' />
+                  </InputAdornment>
+                )
+              }}
+              autoFocus
+            />
+            <List className='overflow-auto p-0 flex-1' sx={{ maxHeight: 250 }}>
+              {filteredMembers.map(member => {
+                const userIdStr = member.userId.toString()
+                const isSelected = selectedPersons.includes(userIdStr)
+                return (
+                  <ListItemButton
+                    key={member.userId}
+                    onClick={() => {
+                      setSelectedPersons(prev => 
+                        isSelected ? prev.filter(id => id !== userIdStr) : [...prev, userIdStr]
+                      )
+                    }}
+                    className='!px-2 !py-1 rounded-md'
+                  >
+                    <ListItemIcon className='!min-w-[30px]'>
+                      <Checkbox
+                        edge="start"
+                        checked={isSelected}
+                        tabIndex={-1}
+                        disableRipple
+                        size="small"
+                        className='!p-1'
+                      />
+                    </ListItemIcon>
+                    <Avatar src={member.mUser?.txtImage} sx={{ width: 24, height: 24, mr: 1, fontSize: '0.75rem', bgcolor: 'primary.main', color: 'white' }}>
+                      {(member.mUser.userName || member.mUser.name || 'U').charAt(0).toUpperCase()}
+                    </Avatar>
+                    <ListItemText 
+                      primary={member.mUser.userName} 
+                      primaryTypographyProps={{ variant: 'body2', className: 'truncate' }}
+                    />
+                  </ListItemButton>
+                )
+              })}
+              {filteredMembers.length === 0 && (
+                <Typography variant='body2' className='text-center p-4 text-textSecondary'>
+                  No users found.
+                </Typography>
+              )}
+            </List>
+            <Divider className='!my-1' />
+            <div className='flex justify-between items-center px-1'>
+              <Button 
+                variant='text' 
+                size='small' 
+                color='error'
+                onClick={() => setSelectedPersons([])}
+                className='!normal-case'
+              >
+                Clear
+              </Button>
+              <Button 
+                variant='contained' 
+                size='small' 
                 onClick={() => {
-                  onValueSelect(member.userId.toString())
+                  onValueSelect(JSON.stringify(selectedPersons))
                   onClose()
                 }}
+                className='!normal-case'
               >
-                <ListItemText primary={member.mUser.userName} />
-              </ListItemButton>
-            ))}
-          </List>
+                Apply
+              </Button>
+            </div>
+          </Box>
         )
 
       // PERBAIKAN 3: Menambahkan auto-close pada DATE

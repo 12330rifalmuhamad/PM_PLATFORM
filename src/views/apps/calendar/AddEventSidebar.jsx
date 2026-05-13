@@ -24,7 +24,7 @@ import CustomTextField from '@core/components/mui/TextField'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
 // Slice Imports
-import { addEvent, deleteEvent, updateEvent, selectedEvent, filterEvents } from '@/redux-store/slices/calendar'
+import { addEvent, deleteEvent, updateEvent, setSelectedEvent } from '@/redux-store/slices/calendar'
 
 // Vars
 const capitalize = string => string && string[0].toUpperCase() + string.slice(1)
@@ -82,11 +82,11 @@ const AddEventSidebar = props => {
         url: event.url || '',
         title: event.title || '',
         allDay: event.allDay,
-        guests: event.extendedProps.guests || [],
-        description: event.extendedProps.description || '',
-        calendar: event.extendedProps.calendar || 'Business',
-        endDate: event.end !== null ? event.end : event.start,
-        startDate: event.start !== null ? event.start : new Date()
+        guests: event.extendedProps?.guests || [],
+        description: event.extendedProps?.description || '',
+        calendar: event.extendedProps?.calendar || 'Business',
+        endDate: event.end !== null ? new Date(event.end) : new Date(event.start),
+        startDate: event.start !== null ? new Date(event.start) : new Date()
       })
     }
   }, [setValue, calendarStore.selectedEvent])
@@ -99,7 +99,7 @@ const AddEventSidebar = props => {
   const handleSidebarClose = () => {
     setValues(defaultState)
     clearErrors()
-    dispatch(selectedEvent(null))
+    dispatch(setSelectedEvent(null))
     handleAddEventSidebarToggle()
   }
 
@@ -112,7 +112,7 @@ const AddEventSidebar = props => {
       allDay: values.allDay,
       start: values.startDate,
       extendedProps: {
-        calendar: capitalize(values.calendar),
+        calendar: values.calendar,
         guests: values.guests && values.guests.length ? values.guests : undefined,
         description: values.description.length ? values.description : undefined
       }
@@ -127,17 +127,14 @@ const AddEventSidebar = props => {
       dispatch(updateEvent({ ...modifiedEvent, id: calendarStore.selectedEvent.id }))
     }
 
-    dispatch(filterEvents())
     handleSidebarClose()
   }
 
   const handleDeleteButtonClick = () => {
     if (calendarStore.selectedEvent) {
       dispatch(deleteEvent(calendarStore.selectedEvent.id))
-      dispatch(filterEvents())
     }
 
-    // calendarApi.getEventById(calendarStore.selectedEvent.id).remove()
     handleSidebarClose()
   }
 

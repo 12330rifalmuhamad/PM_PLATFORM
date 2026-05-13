@@ -10,11 +10,53 @@ export const fetchEvents = createAsyncThunk('calendar/fetchEvents', async () => 
   return data
 })
 
+// Add event to database
+export const addEvent = createAsyncThunk('calendar/addEvent', async (event, { dispatch }) => {
+  const response = await fetch('/api/calendar/events', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(event)
+  })
+  if (!response.ok) {
+    throw new Error('Failed to add calendar event')
+  }
+  const data = await response.json()
+  dispatch(fetchEvents())
+  return data
+})
+
+// Update event in database
+export const updateEvent = createAsyncThunk('calendar/updateEvent', async (event, { dispatch }) => {
+  const response = await fetch('/api/calendar/events', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(event)
+  })
+  if (!response.ok) {
+    throw new Error('Failed to update calendar event')
+  }
+  const data = await response.json()
+  dispatch(fetchEvents())
+  return data
+})
+
+// Delete event from database
+export const deleteEvent = createAsyncThunk('calendar/deleteEvent', async (id, { dispatch }) => {
+  const response = await fetch(`/api/calendar/events?id=${id}`, {
+    method: 'DELETE'
+  })
+  if (!response.ok) {
+    throw new Error('Failed to delete calendar event')
+  }
+  dispatch(fetchEvents())
+  return id
+})
+
 const initialState = {
   events: [],
   filteredEvents: [],
   selectedEvent: null,
-  selectedCalendars: ['Personal', 'Business', 'Family', 'Holiday', 'ETC'],
+  selectedCalendars: ['Personal', 'Business', 'Family', 'Holiday', 'ETC', 'Tasks'],
   loading: false,
   error: null
 }
@@ -30,34 +72,7 @@ export const calendarSlice = createSlice({
     filterEvents: state => {
       state.filteredEvents = state.events
     },
-    addEvent: (state, action) => {
-      const newEvent = { ...action.payload, id: `${parseInt(state.events[state.events.length - 1]?.id ?? '') + 1}` }
-
-      state.events.push(newEvent)
-    },
-    updateEvent: (state, action) => {
-      state.events = state.events.map(event => {
-        if (action.payload._def && event.id === action.payload._def.publicId) {
-          return {
-            id: event.id,
-            url: action.payload._def.url,
-            title: action.payload._def.title,
-            allDay: action.payload._def.allDay,
-            end: action.payload._instance.range.end,
-            start: action.payload._instance.range.start,
-            extendedProps: action.payload._def.extendedProps
-          }
-        } else if (event.id === action.payload.id) {
-          return action.payload
-        } else {
-          return event
-        }
-      })
-    },
-    deleteEvent: (state, action) => {
-      state.events = state.events.filter(event => event.id !== action.payload)
-    },
-    selectedEvent: (state, action) => {
+    setSelectedEvent: (state, action) => {
       state.selectedEvent = action.payload
     },
     filterCalendarLabel: (state, action) => {
@@ -72,8 +87,7 @@ export const calendarSlice = createSlice({
       state.events = filterEventsUsingCheckbox(state.filteredEvents, state.selectedCalendars)
     },
     filterAllCalendarLabels: (state, action) => {
-      state.selectedCalendars = action.payload ? ['Personal', 'Business', 'Family', 'Holiday', 'ETC'] : []
-      // Update with filtered real events
+      state.selectedCalendars = action.payload ? ['Personal', 'Business', 'Family', 'Holiday', 'ETC', 'Tasks'] : []
       state.events = filterEventsUsingCheckbox(state.filteredEvents, state.selectedCalendars)
     }
   },
@@ -85,10 +99,7 @@ export const calendarSlice = createSlice({
       })
       .addCase(fetchEvents.fulfilled, (state, action) => {
         state.loading = false
-        state.events = action.payload || []
         state.filteredEvents = action.payload || []
-        
-        // Filter based on currently selected calendars
         state.events = filterEventsUsingCheckbox(state.filteredEvents, state.selectedCalendars)
       })
       .addCase(fetchEvents.rejected, (state, action) => {
@@ -99,10 +110,7 @@ export const calendarSlice = createSlice({
 })
 export const {
   filterEvents,
-  addEvent,
-  updateEvent,
-  deleteEvent,
-  selectedEvent,
+  setSelectedEvent,
   filterCalendarLabel,
   filterAllCalendarLabels
 } = calendarSlice.actions

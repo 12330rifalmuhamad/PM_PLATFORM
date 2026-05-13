@@ -13,7 +13,7 @@ import classnames from 'classnames'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
 // Slice Imports
-import { filterAllCalendarLabels, filterCalendarLabel, selectedEvent } from '@/redux-store/slices/calendar'
+import { filterAllCalendarLabels, filterCalendarLabel, setSelectedEvent } from '@/redux-store/slices/calendar'
 
 const SidebarLeft = props => {
   // Props
@@ -51,7 +51,7 @@ const SidebarLeft = props => {
     : null
 
   const handleSidebarToggleSidebar = () => {
-    dispatch(selectedEvent(null))
+    dispatch(setSelectedEvent(null))
     handleAddEventSidebarToggle()
   }
 

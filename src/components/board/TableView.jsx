@@ -96,6 +96,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
     TextField,
     Button,
     Avatar as MuiAvatar,
+    AvatarGroup,
     Menu,
     MenuItem,
     Popover,
@@ -141,7 +142,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
   }
 
   const findUserById = (userId, board) =>
-    (board?.boardMember || []).find(m => m.userId === parseInt(userId ?? '', 10))?.mUser
+    (board?.boardMember || []).find(m => String(m.userId) === String(userId ?? ''))?.mUser
 
   const formatTimelineDate = dateStr => {
     if (!dateStr) return ''
@@ -179,8 +180,26 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
   // CELL COMPONENT DEFINITIONS
   // =================================================================
 
-  const PersonAvatar = ({ user }) => {
-    if (!user) {
+  const parsePersonValue = (value, board) => {
+    if (!value) return [];
+    try {
+      if (typeof value === 'string' && value.startsWith('[')) {
+        const userIds = JSON.parse(value);
+        return userIds.map(id => findUserById(id, board)).filter(Boolean);
+      }
+      if (Array.isArray(value)) {
+        return value.map(id => findUserById(id, board)).filter(Boolean);
+      }
+      const user = findUserById(value, board);
+      return user ? [user] : [];
+    } catch (e) {
+      const user = findUserById(value, board);
+      return user ? [user] : [];
+    }
+  }
+
+  const PersonAvatar = ({ users }) => {
+    if (!users || users.length === 0) {
       return (
         <Tooltip title='Assign Owner'>
           <MuiAvatar sx={{ width: { xs: 24, md: 28 }, height: { xs: 24, md: 28 }, bgcolor: 'transparent', color: 'text.disabled', border: '1px dashed var(--mui-palette-divider)', cursor: 'pointer', '&:hover': { bgcolor: 'action.hover', color: 'primary.main', borderColor: 'primary.main' } }}>
@@ -190,13 +209,31 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
       )
     }
 
-    const name = user.userName || user.name || 'User'
+    if (users.length === 1) {
+      const user = users[0]
+      const name = user.userName || user.name || 'User'
+      return (
+        <Tooltip title={name}>
+          <MuiAvatar src={user.txtImage} sx={{ width: { xs: 24, md: 28 }, height: { xs: 24, md: 28 }, fontSize: { xs: '0.875rem', md: '0.875rem' }, bgcolor: 'primary.main', color: 'primary.contrastText', cursor: 'pointer' }}>
+            {name.charAt(0).toUpperCase()}
+          </MuiAvatar>
+        </Tooltip>
+      )
+    }
+
     return (
-      <Tooltip title={name}>
-        <MuiAvatar sx={{ width: { xs: 32, md: 28 }, height: { xs: 32, md: 28 }, fontSize: { xs: '0.875rem', md: '0.875rem' }, bgcolor: 'primary.main', color: 'primary.contrastText', cursor: 'pointer' }}>
-          {name.charAt(0).toUpperCase()}
-        </MuiAvatar>
-      </Tooltip>
+      <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: { xs: 24, md: 28 }, height: { xs: 24, md: 28 }, fontSize: '0.875rem', borderColor: 'var(--mui-palette-background-paper)' } }}>
+        {users.map(u => {
+          const name = u.userName || u.name || 'User'
+          return (
+            <Tooltip key={u.userId} title={name}>
+              <MuiAvatar src={u.txtImage} sx={{ bgcolor: 'primary.main', color: 'primary.contrastText', cursor: 'pointer' }}>
+                {name.charAt(0).toUpperCase()}
+              </MuiAvatar>
+            </Tooltip>
+          )
+        })}
+      </AvatarGroup>
     )
   }
 
@@ -479,7 +516,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
       case 'PERSON':
         return (
           <div className='flex items-center justify-center w-full h-full cursor-pointer hover:bg-actionHover transition-colors' onClick={handleClick}>
-            <PersonAvatar user={cellValue ? findUserById(cellValue.value, board) : null} />
+            <PersonAvatar users={parsePersonValue(cellValue?.value, board)} />
           </div>
         )
       case 'STATUS':
@@ -1149,6 +1186,35 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
     const [quickAddLabel, setQuickAddLabel] = useState('')
 
+    // State untuk PERSON assignment
+    const [personSearch, setPersonSearch] = useState('')
+    const [selectedPersons, setSelectedPersons] = useState([])
+
+    useEffect(() => {
+      if (open && column?.columnType === 'PERSON') {
+        try {
+          if (!column.currentValue) {
+            setSelectedPersons([])
+          } else if (typeof column.currentValue === 'string' && column.currentValue.startsWith('[')) {
+            setSelectedPersons(JSON.parse(column.currentValue))
+          } else {
+            setSelectedPersons([column.currentValue])
+          }
+        } catch (e) {
+          setSelectedPersons([column.currentValue])
+        }
+        setPersonSearch('')
+      }
+    }, [open, column])
+
+    const filteredMembers = useMemo(() => {
+      if (!board?.boardMember) return []
+      return board.boardMember.filter(m => {
+        const name = m.mUser?.userName || m.mUser?.name || ''
+        return name.toLowerCase().includes(personSearch.toLowerCase())
+      })
+    }, [board?.boardMember, personSearch])
+
     const handleLabelChange = (id, newText) =>
       setLabels(prev => prev.map(opt => (opt.id === id ? { ...opt, label: newText } : opt)))
 
@@ -1407,37 +1473,87 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
           )
         case 'PERSON':
           return (
-            <List sx={{ minWidth: 200, p: 0 }}>
-              <ListItemButton
-                onClick={() => {
-                  onValueSelect('')
-                  onClose()
+            <Box className='p-2 flex flex-col gap-2' sx={{ width: 250, maxHeight: 400 }}>
+              <TextField
+                size="small"
+                placeholder="Search people..."
+                value={personSearch}
+                onChange={e => setPersonSearch(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <i className='tabler-search text-sm' />
+                    </InputAdornment>
+                  )
                 }}
-                sx={{ borderBottom: '1px solid', borderColor: 'divider' }}
-              >
-                <MuiAvatar sx={{ width: 24, height: 24, mr: 2, bgcolor: 'action.hover' }}>
-                  <i className='tabler-user-off text-xs text-textSecondary' />
-                </MuiAvatar>
-                <ListItemText primary="Unassigned" primaryTypographyProps={{ variant: 'body2', color: 'text.secondary' }} />
-              </ListItemButton>
-              {(board?.boardMember || []).map(member => {
-                const name = member.mUser?.userName || member.mUser?.name || 'Unknown'
-                return (
-                  <ListItemButton
-                    key={member.userId}
-                    onClick={() => {
-                      onValueSelect(member.userId.toString())
-                      onClose()
-                    }}
-                  >
-                    <MuiAvatar sx={{ width: 24, height: 24, mr: 2, fontSize: '0.75rem', bgcolor: 'primary.main', color: 'white' }}>
-                      {name.charAt(0).toUpperCase()}
-                    </MuiAvatar>
-                    <ListItemText primary={name} primaryTypographyProps={{ variant: 'body2' }} />
-                  </ListItemButton>
-                )
-              })}
-            </List>
+                autoFocus
+              />
+              <List className='overflow-auto p-0 flex-1' sx={{ maxHeight: 250 }}>
+                {filteredMembers.map(member => {
+                  const name = member.mUser?.userName || member.mUser?.name || 'Unknown'
+                  const userIdStr = member.userId.toString()
+                  const isSelected = selectedPersons.includes(userIdStr)
+                  
+                  return (
+                    <ListItemButton
+                      key={member.userId}
+                      onClick={() => {
+                        setSelectedPersons(prev => 
+                          isSelected ? prev.filter(id => id !== userIdStr) : [...prev, userIdStr]
+                        )
+                      }}
+                      className='!px-2 !py-1 rounded-md'
+                    >
+                      <ListItemIcon className='!min-w-[30px]'>
+                        <Checkbox
+                          edge="start"
+                          checked={isSelected}
+                          tabIndex={-1}
+                          disableRipple
+                          size="small"
+                          className='!p-1'
+                        />
+                      </ListItemIcon>
+                      <MuiAvatar src={member.mUser?.txtImage} sx={{ width: 24, height: 24, mr: 1, fontSize: '0.75rem', bgcolor: 'primary.main', color: 'white' }}>
+                        {name.charAt(0).toUpperCase()}
+                      </MuiAvatar>
+                      <ListItemText 
+                        primary={name} 
+                        primaryTypographyProps={{ variant: 'body2', className: 'truncate' }}
+                      />
+                    </ListItemButton>
+                  )
+                })}
+                {filteredMembers.length === 0 && (
+                  <Typography variant='body2' className='text-center p-4 text-textSecondary'>
+                    No users found.
+                  </Typography>
+                )}
+              </List>
+              <Divider className='!my-1' />
+              <div className='flex justify-between items-center px-1'>
+                <Button 
+                  variant='text' 
+                  size='small' 
+                  color='error'
+                  onClick={() => setSelectedPersons([])}
+                  className='!normal-case'
+                >
+                  Clear
+                </Button>
+                <Button 
+                  variant='contained' 
+                  size='small' 
+                  onClick={() => {
+                    onValueSelect(selectedPersons.length > 0 ? JSON.stringify(selectedPersons) : '')
+                    onClose()
+                  }}
+                  className='!normal-case'
+                >
+                  Apply
+                </Button>
+              </div>
+            </Box>
           )
         case 'DATE':
           return (
@@ -2155,6 +2271,12 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
               const valObj = item.values.find(v => normalizeId(v.columnId) === normalizeId(filter.columnId))
 
               itemValue = valObj ? valObj.value : ''
+
+              const colDef = board.columns.find(c => normalizeId(c.columnId) === normalizeId(filter.columnId))
+              if (colDef && colDef.columnType === 'PERSON' && itemValue) {
+                const users = parsePersonValue(itemValue, board)
+                itemValue = users.map(u => u.userName || u.name).join(', ')
+              }
             }
 
             const filterVal = filter.value ? filter.value.toLowerCase() : ''
@@ -3051,8 +3173,8 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
             
             // Format specific column types if needed
             if (col.columnType === 'PERSON' && cellValue) {
-              const user = board.boardMember.find(m => m.userId.toString() === cellValue.toString())
-              cellValue = user?.mUser?.userName || cellValue
+              const users = parsePersonValue(cellValue, board)
+              cellValue = users.length > 0 ? users.map(u => u.userName || u.name).join(', ') : cellValue
             }
 
             row[col.columnName] = cellValue || ''
@@ -3435,7 +3557,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                               case 'PERSON':
                                 cellContent = (
                                   <div className='flex justify-center'>
-                                    <PersonAvatar user={cellValue ? findUserById(cellValue.value, board) : null} />
+                                    <PersonAvatar users={parsePersonValue(cellValue?.value, board)} />
                                   </div>
                                 )
                                 break

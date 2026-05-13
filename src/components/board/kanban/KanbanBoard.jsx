@@ -39,12 +39,27 @@ const KanbanBoard = () => {
         const statusValue = item.values.find(v => v.columnId === statusColumn.columnId)?.value || 'Belum Mulai'
         const personValue = item.values.find(v => v.columnId === personColumn?.columnId)?.value
         const dateValue = item.values.find(v => v.column?.columnType === 'DATE' || v.columnType === 'DATE')?.value
-        const user = personValue ? board.boardMember.find(m => m.userId === parseInt(personValue))?.mUser : null
+        
+        let users = [];
+        if (personValue) {
+          try {
+            if (personValue.startsWith('[')) {
+              const userIds = JSON.parse(personValue);
+              users = userIds.map(id => board.boardMember.find(m => m.userId.toString() === id.toString())?.mUser).filter(Boolean);
+            } else {
+              const u = board.boardMember.find(m => m.userId.toString() === personValue.toString())?.mUser;
+              if (u) users.push(u);
+            }
+          } catch(e) {
+            const u = board.boardMember.find(m => m.userId.toString() === personValue.toString())?.mUser;
+            if (u) users.push(u);
+          }
+        }
 
         allTasks.set(item.taskId, {
           ...item,
           status: statusValue,
-          user: user,
+          users: users,
           date: dateValue || null
         })
       })

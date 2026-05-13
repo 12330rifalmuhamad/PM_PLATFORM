@@ -2,15 +2,35 @@
 
 import { useState } from 'react'
 
-import { Card, CardContent, Typography, Avatar as MuiAvatar, IconButton, Menu, MenuItem, Chip } from '@mui/material'
+import { Card, CardContent, Typography, Avatar as MuiAvatar, AvatarGroup, Tooltip, IconButton, Menu, MenuItem, Chip } from '@mui/material'
 
-const PersonAvatar = ({ user }) => {
-  if (!user) return null
+const PersonAvatar = ({ users }) => {
+  if (!users || users.length === 0) return null
+
+  if (users.length === 1) {
+    const user = users[0];
+    return (
+      <Tooltip title={user.userName || user.name || 'User'}>
+        <MuiAvatar src={user.txtImage} sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: 'primary.main', color: 'primary.contrastText' }}>
+          {(user.userName || user.name || 'U').charAt(0).toUpperCase()}
+        </MuiAvatar>
+      </Tooltip>
+    )
+  }
 
   return (
-    <MuiAvatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }} title={user.userName}>
-      {user.userName.charAt(0)}
-    </MuiAvatar>
+    <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: 24, height: 24, fontSize: '0.75rem', borderColor: 'var(--mui-palette-background-paper)' } }}>
+      {users.map(u => {
+        const name = u.userName || u.name || 'User'
+        return (
+          <Tooltip key={u.userId || Math.random()} title={name}>
+            <MuiAvatar src={u.txtImage} sx={{ bgcolor: 'primary.main', color: 'primary.contrastText' }}>
+              {name.charAt(0).toUpperCase()}
+            </MuiAvatar>
+          </Tooltip>
+        )
+      })}
+    </AvatarGroup>
   )
 }
 
@@ -202,8 +222,8 @@ const TaskCard = ({ task, onOpenDrawer, board, mutate, column, columns, setColum
             ) : null}
           </div>
 
-          <div className='flex justify-end items-center w-full'>
-            <PersonAvatar user={task.user} />
+          <div className='flex justify-end items-center w-full mt-2'>
+            <PersonAvatar users={task.users} />
           </div>
         </CardContent>
       </Card>

@@ -68,7 +68,7 @@ export async function PUT(request) {
         uploadedImageUrl = uploadResult.secure_url
       } catch (err) {
         console.error('Failed to upload profile image to Cloudinary:', err)
-        return NextResponse.json({ message: 'Failed to upload image' }, { status: 500 })
+        return NextResponse.json({ message: 'Failed to upload image', error: err?.message || String(err), stack: err?.stack }, { status: 500 })
       }
     }
 
@@ -81,7 +81,7 @@ export async function PUT(request) {
         txtCompany: company || undefined,
         txtJobTitle: jobTitle || undefined,
         txtLocation: location || undefined,
-        txtImage: uploadedImageUrl || undefined,
+        txtImage: uploadedImageUrl !== undefined ? uploadedImageUrl : undefined,
         txtUpdatedBy: session.user.email,
       }
     })
@@ -102,7 +102,7 @@ export async function PUT(request) {
     })
   } catch (error) {
     console.error('Failed to update user profile:', error)
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ message: 'Internal Server Error', error: error?.message || String(error), stack: error?.stack }, { status: 500 })
   }
 }
 

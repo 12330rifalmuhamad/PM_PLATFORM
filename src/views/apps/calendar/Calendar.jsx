@@ -11,7 +11,7 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 
 // Slice Imports
-import { filterEvents, selectedEvent, updateEvent } from '@/redux-store/slices/calendar'
+import { filterEvents, setSelectedEvent, updateEvent } from '@/redux-store/slices/calendar'
 
 const blankEvent = {
   title: '',
@@ -107,7 +107,7 @@ const Calendar = props => {
     },
     eventClick({ event: clickedEvent, jsEvent }) {
       jsEvent.preventDefault()
-      dispatch(selectedEvent(clickedEvent))
+      dispatch(setSelectedEvent(clickedEvent))
       handleAddEventSidebarToggle()
 
       if (clickedEvent.url) {
@@ -134,7 +134,7 @@ const Calendar = props => {
       ev.start = info.date
       ev.end = info.date
       ev.allDay = true
-      dispatch(selectedEvent(ev))
+      dispatch(setSelectedEvent(ev))
       handleAddEventSidebarToggle()
     },
 
@@ -145,7 +145,6 @@ const Calendar = props => {
         */
     eventDrop({ event: droppedEvent }) {
       dispatch(updateEvent(droppedEvent))
-      dispatch(filterEvents())
     },
 
     /*
@@ -154,7 +153,6 @@ const Calendar = props => {
         */
     eventResize({ event: resizedEvent }) {
       dispatch(updateEvent(resizedEvent))
-      dispatch(filterEvents())
     },
 
     // @ts-ignore
