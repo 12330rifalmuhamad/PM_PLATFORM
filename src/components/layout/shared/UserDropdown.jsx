@@ -71,7 +71,7 @@ const UserDropdown = () => {
   const handleUserLogout = async () => {
     try {
       // Sign out from the app
-      await signOut({ callbackUrl: '/' })
+      await signOut({ callbackUrl: 'http://76.13.20.155:3003' })
     } catch (error) {
       console.error(error)
 
