@@ -15,7 +15,17 @@ import Button from '@mui/material/Button'
 import Avatar from '@mui/material/Avatar'
 import CircularProgress from '@mui/material/CircularProgress'
 
-const fetcher = url => fetch(url).then(res => res.json())
+const fetcher = async url => {
+  const res = await fetch(url)
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+
+    throw new Error(errorData.message || 'Failed to fetch updates')
+  }
+
+  return res.json()
+}
 
 export default function ItemDetailPanel({ item, board, onClose }) {
   const { data: session } = useSession()
@@ -23,6 +33,7 @@ export default function ItemDetailPanel({ item, board, onClose }) {
   const [newUpdateText, setNewUpdateText] = useState('')
 
   const updatesUrl = `/api/tasks/${item.taskId}/updates`
+
   const { data: updates, error, isLoading } = useSWR(updatesUrl, fetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 3000
@@ -31,15 +42,17 @@ export default function ItemDetailPanel({ item, board, onClose }) {
   const handlePostUpdate = async () => {
     if (!newUpdateText.trim()) return
 
+    const currentUpdates = Array.isArray(updates) ? updates : []
+
     // Optimistic UI: Tambahkan update baru ke cache SWR secara lokal
     // sebelum request ke server selesai, agar UI terasa instan.
     mutate(
       updatesUrl,
       [
-        ...updates,
+        ...currentUpdates,
         {
           updateText: newUpdateText,
-          user: session.user,
+          user: session?.user || {},
           dtmInserted: new Date().toISOString(),
           isOptimistic: true
         }
@@ -81,13 +94,20 @@ export default function ItemDetailPanel({ item, board, onClose }) {
           )}
           {error && <Typography color='error'>Gagal memuat updates.</Typography>}
           <div className='space-y-6'>
-            {updates?.map((update, index) => (
+            {Array.isArray(updates) && updates.length === 0 && !isLoading && !error && (
+              <Typography variant='body2' className='text-gray-400 text-center py-4'>
+                Belum ada update untuk task ini.
+              </Typography>
+            )}
+            {Array.isArray(updates) &&
+              updates.map((update, index) => (
               <div
                 key={update.updateId || `optimistic-${index}`}
                 className={`flex gap-4 ${update.isOptimistic ? 'opacity-60' : ''}`}
               >
                 {(() => {
                   const displayName = update?.user?.userName || update?.user?.name || 'User'
+
                   const initial =
                     typeof displayName === 'string' && displayName.length > 0 ? displayName.charAt(0) : 'U'
 

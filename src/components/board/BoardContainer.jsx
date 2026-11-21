@@ -29,9 +29,19 @@ import DashboardView from './DashboardView'
 // Impor state management modal
 import { useModalStore } from '@/store/useModalStore'
 
-const fetcher = url => fetch(url).then(res => res.json())
+const fetcher = async url => {
+  const res = await fetch(url)
 
-export default function BoardContainer({ boardId, initialBoard }) {
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+
+    throw new Error(errorData.message || 'Failed to fetch board data')
+  }
+
+  return res.json()
+}
+
+export default function BoardContainer({ boardId }) {
   // Mengatur default activeView ke 'table' agar sesuai dengan 'Main table'
   const [activeView, setActiveView] = useState('table')
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
@@ -41,9 +51,8 @@ export default function BoardContainer({ boardId, initialBoard }) {
     boardId ? `/api/boards/${boardId}` : null,
     fetcher,
     {
-      fallbackData: initialBoard,
       revalidateOnFocus: false,
-      dedupingInterval: 5000,
+      dedupingInterval: 3000,
       keepPreviousData: true
     }
   )
@@ -118,7 +127,7 @@ export default function BoardContainer({ boardId, initialBoard }) {
     return (
       <div className={`flex justify-center items-center h-48 text-lg text-red-500`}> Error: Gagal memuat papan.</div>
     )
-  if (!board)
+  if (!board || !board.columns || !board.groups)
     return (
       <div className={`flex justify-center items-center h-48 text-lg ${darkModeClasses}`}>Papan tidak ditemukan.</div>
     )

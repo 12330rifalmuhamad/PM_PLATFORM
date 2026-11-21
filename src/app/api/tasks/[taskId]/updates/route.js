@@ -12,27 +12,25 @@ export async function GET(request, { params }) {
 
   try {
     const { taskId } = await params
+    const parsedTaskId = parseInt(taskId)
+
+    if (isNaN(parsedTaskId)) {
+      return NextResponse.json({ message: 'Invalid task ID' }, { status: 400 })
+    }
 
     const updates = await prisma.trTaskUpdate.findMany({
-      where: { taskId: parseInt(taskId) },
+      where: { taskId: parsedTaskId },
       orderBy: { dtmInserted: 'desc' },
       include: {
-        user: {
-          select: {
-            userId: true,
-            userName: true,
-            email: true,
-            txtImage: true
-          }
-        }
+        user: true
       }
     })
 
     return NextResponse.json(updates)
   } catch (error) {
     console.error('Failed to fetch task updates:', error)
-    
-return NextResponse.json({ message: 'Failed to fetch task updates', error: error?.message }, { status: 500 })
+
+    return NextResponse.json({ message: 'Failed to fetch task updates', error: error?.message }, { status: 500 })
   }
 }
 
@@ -43,6 +41,12 @@ export async function POST(request, { params }) {
 
   try {
     const { taskId } = await params
+    const parsedTaskId = parseInt(taskId)
+
+    if (isNaN(parsedTaskId)) {
+      return NextResponse.json({ message: 'Invalid task ID' }, { status: 400 })
+    }
+
     const body = await request.json()
     const { updateText } = body
 
@@ -52,28 +56,21 @@ export async function POST(request, { params }) {
 
     const created = await prisma.trTaskUpdate.create({
       data: {
-        taskId: parseInt(taskId),
+        taskId: parsedTaskId,
         userId: parseInt(session.user.id),
         updateText,
         txtInsertedBy: session.user.name
       },
       include: {
-        user: {
-          select: {
-            userId: true,
-            userName: true,
-            email: true,
-            txtImage: true
-          }
-        }
+        user: true
       }
     })
 
     return NextResponse.json(created, { status: 201 })
   } catch (error) {
     console.error('Failed to create task update:', error)
-    
-return NextResponse.json({ message: 'Failed to create task update', error: error?.message }, { status: 500 })
+
+    return NextResponse.json({ message: 'Failed to create task update', error: error?.message }, { status: 500 })
   }
 }
 

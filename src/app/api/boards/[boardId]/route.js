@@ -4,7 +4,6 @@ import { getServerSession } from 'next-auth'
 
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import prisma from '@/libs/prisma'
-import { getBoardData } from '@/libs/boardData'
 
 export async function GET(request, { params }) {
   const session = await getServerSession(authOptions)
@@ -15,13 +14,73 @@ export async function GET(request, { params }) {
   const userId = parseInt(session.user.id)
 
   try {
-    const result = await getBoardData(boardId, userId)
+    const parsedBoardId = parseInt(boardId)
 
-    if (result.error) {
-      return NextResponse.json({ message: result.error }, { status: result.status })
+    if (isNaN(parsedBoardId)) {
+      return NextResponse.json({ message: 'Invalid board ID' }, { status: 400 })
     }
 
-    return NextResponse.json(result.data)
+    // 1. Verify access (check direct board membership or workspace membership)
+    const boardAccess = await prisma.trBoardMember.findFirst({
+      where: { boardId: parsedBoardId, userId }
+    })
+
+    if (!boardAccess) {
+      const boardRecord = await prisma.board.findUnique({
+        where: { boardId: parsedBoardId },
+        select: { workspaceId: true }
+      })
+
+      if (!boardRecord) {
+        return NextResponse.json({ message: 'Board not found' }, { status: 404 })
+      }
+
+      const wsAccess = await prisma.trWorkspaceMember.findFirst({
+        where: { workspaceId: boardRecord.workspaceId, userId }
+      })
+
+      if (!wsAccess) {
+        return NextResponse.json({ message: 'Access denied' }, { status: 403 })
+      }
+    }
+
+    // 2. Fetch Board Data with Subitems & full user details
+    const board = await prisma.board.findUnique({
+      where: { boardId: parsedBoardId },
+      include: {
+        boardMember: { include: { mUser: true } },
+        columns: {
+          orderBy: { sortOrder: 'asc' },
+          include: {
+            options: { orderBy: { sortOrder: 'asc' } },
+            watchedStatusColumns: { include: { statusColumn: true } }
+          }
+        },
+        groups: {
+          orderBy: [{ sortOrder: 'asc' }, { dtmInserted: 'asc' }],
+          include: {
+            items: {
+              where: { parentId: null },
+              orderBy: [{ sortOrder: 'asc' }, { dtmInserted: 'asc' }],
+              include: {
+                values: true,
+                subItems: {
+                  orderBy: [{ sortOrder: 'asc' }, { dtmInserted: 'asc' }],
+                  include: {
+                    values: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        widgets: true
+      }
+    })
+
+    if (!board) return NextResponse.json({ message: 'Board not found' }, { status: 404 })
+
+    return NextResponse.json(board)
   } catch (error) {
     console.error('Failed to fetch board:', error)
 
@@ -57,21 +116,8 @@ export async function PUT(request, { params }) {
         description: description || undefined,
         txtUpdatedBy: session.user.name
       },
-
-      // Include struktur yang sama persis dengan GET agar UI sync
       include: {
-        boardMember: {
-          include: {
-            mUser: {
-              select: {
-                userId: true,
-                userName: true,
-                email: true,
-                txtImage: true
-              }
-            }
-          }
-        },
+        boardMember: { include: { mUser: true } },
         columns: {
           orderBy: { sortOrder: 'asc' },
           include: {
@@ -83,7 +129,7 @@ export async function PUT(request, { params }) {
           orderBy: [{ sortOrder: 'asc' }, { dtmInserted: 'asc' }],
           include: {
             items: {
-              where: { parentId: null }, // Filter parent only
+              where: { parentId: null },
               orderBy: [{ sortOrder: 'asc' }, { dtmInserted: 'asc' }],
               include: {
                 values: true,
