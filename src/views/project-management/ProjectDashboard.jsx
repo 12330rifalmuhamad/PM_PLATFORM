@@ -146,7 +146,7 @@ export default function ProjectDashboard() {
                         {workspace.boards.slice(0, 3).map(board => (
                           <div
                             key={board.boardId}
-                            className='flex items-center gap-2 p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800'
+                            className='flex items-center gap-2 p-2 rounded-md hover:bg-actionHover transition-colors cursor-pointer'
                             onClick={e => {
                               e.stopPropagation()
                               handleBoardClick(board.boardId)

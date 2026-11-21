@@ -16,7 +16,7 @@ const NavItem = ({ href, icon, text, active = false, isBoard = false }) => (
       <div
         className={`flex items-center p-2 text-sm rounded-md transition-colors duration-150
         ${isBoard ? 'pl-8' : ''}
-        ${active ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+        ${active ? 'bg-actionHover text-primary-main font-semibold' : 'text-textSecondary hover:bg-actionHover hover:text-textPrimary'}`}
       >
         <span className='text-lg'>{icon}</span>
         <span className='ml-3 truncate whitespace-nowrap'>{text}</span>
@@ -72,8 +72,8 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`h-screen bg-gray-800 text-white flex flex-col relative transition-all duration-300 ease-in-out
-      ${isCollapsed ? 'w-0 border-none' : 'w-64 border-r border-gray-700'}`}
+      className={`h-screen bg-backgroundPaper text-textPrimary flex flex-col relative transition-all duration-300 ease-in-out
+      ${isCollapsed ? 'w-0 border-none' : 'w-64 border-r border-divider'}`}
     >
       {/* TOMBOL TOGGLE
         - Saat Buka: right-[-12px] (menempel di border)
@@ -81,11 +81,11 @@ export default function Sidebar() {
       */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className={`absolute top-6 z-50 flex items-center justify-center w-8 h-8 rounded-full shadow-md border focus:outline-none transition-all duration-300
+        className={`absolute top-6 z-50 flex items-center justify-center w-8 h-8 rounded-full shadow-md border border-divider focus:outline-none transition-all duration-300 bg-backgroundPaper text-textPrimary hover:bg-actionHover
         ${
           isCollapsed
-            ? '-right-12 bg-gray-800 border-gray-600 text-white hover:bg-gray-700' // Gaya saat tertutup (floating icon)
-            : '-right-4 bg-gray-700 border-gray-600 text-gray-300 hover:text-white' // Gaya saat terbuka (border button)
+            ? '-right-12' // Gaya saat tertutup (floating icon)
+            : '-right-4' // Gaya saat terbuka (border button)
         }`}
         title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
       >
@@ -115,14 +115,14 @@ export default function Sidebar() {
           </ul>
         </nav>
 
-        <hr className='border-gray-700 mx-2' />
+        <hr className='border-divider mx-2' />
 
         {/* Bagian Workspaces */}
         <div className='px-2 py-4 overflow-y-auto custom-scrollbar flex-1'>
           <div className='flex justify-between items-center mb-2'>
             <button
               onClick={() => setIsWorkspacesSectionOpen(!isWorkspacesSectionOpen)}
-              className='flex items-center w-full text-gray-300 hover:text-white'
+              className='flex items-center w-full text-textSecondary hover:text-textPrimary'
             >
               <i
                 className={`tabler-chevron-down transition-transform duration-200 ${
@@ -135,7 +135,7 @@ export default function Sidebar() {
 
           {isWorkspacesSectionOpen && (
             <div className='flex flex-col space-y-2 mt-2'>
-              {!workspaces && !error && <div className='text-gray-400 px-2 text-xs'>Loading...</div>}
+              {!workspaces && !error && <div className='text-textDisabled px-2 text-xs'>Loading...</div>}
 
               {Array.isArray(workspaces) &&
                 workspaces.map(workspace => {
@@ -147,15 +147,15 @@ export default function Sidebar() {
                       <div className='group flex items-center justify-between'>
                         <button
                           onClick={() => toggleWorkspace(workspace.workspaceId)}
-                          className='flex items-center flex-1 text-left py-1 hover:bg-gray-700/50 rounded px-1'
+                          className='flex items-center flex-1 text-left py-1 hover:bg-actionHover rounded px-1'
                         >
                           <i
-                            className={`tabler-chevron-right text-gray-400 text-xs transition-transform duration-200 ${
+                            className={`tabler-chevron-right text-textDisabled text-xs transition-transform duration-200 ${
                               isWorkspaceOpen ? 'rotate-90' : ''
                             }`}
                           />
-                          <i className='tabler-folder text-base text-blue-400 ml-1' />
-                          <span className='ml-2 text-sm font-medium text-gray-300 truncate w-32'>
+                          <i className='tabler-folder text-base text-primary-main ml-1' />
+                          <span className='ml-2 text-sm font-medium text-textPrimary truncate w-32'>
                             {workspace.workspaceName}
                           </span>
                         </button>
@@ -197,7 +197,7 @@ export default function Sidebar() {
             </svg>
           </div>
           <p className='font-semibold text-sm'>Youre a Guest here</p>
-          <p className='text-xs text-gray-400 mt-1'>Get monday.coms full power</p>
+          <p className='text-xs text-textSecondary mt-1'>Get monday.coms full power</p>
           <Link href='/register'>
             <span className='text-blue-400 hover:underline text-sm font-semibold mt-2 block'>Create your account</span>
           </Link>

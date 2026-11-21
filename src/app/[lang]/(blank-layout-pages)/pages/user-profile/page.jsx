@@ -195,7 +195,7 @@ const UserProfilePage = () => {
         return (
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
             {/* User Information Card */}
-            <Card className='bg-gray-800 border-gray-700'>
+            <Card className='bg-backgroundPaper border border-divider shadow-sm'>
               <CardContent className='p-6'>
                 <Grid container spacing={4}>
                   <Grid item xs={12} md={4}>
@@ -203,7 +203,7 @@ const UserProfilePage = () => {
                       <Avatar
                         src={profileImage}
                         alt={session?.user?.name || 'User'}
-                        className='w-24 h-24 bg-gray-600'
+                        className='w-24 h-24 bg-actionHover'
                       />
                       <Box className='flex flex-col items-center space-y-2'>
                         <input
@@ -218,7 +218,7 @@ const UserProfilePage = () => {
                             variant='outlined'
                             component='span'
                             size='small'
-                            className='text-white border-gray-500 hover:border-gray-400'
+                            className='border-divider text-textPrimary hover:bg-actionHover'
                           >
                             <i className='tabler-camera mr-2' />
                             Change Photo
@@ -230,7 +230,7 @@ const UserProfilePage = () => {
 
                   <Grid item xs={12} md={8}>
                     <Box className='space-y-4'>
-                      <Typography variant='h5' className='text-white font-semibold'>
+                      <Typography variant='h5' className='text-textPrimary font-semibold'>
                         {session?.user?.name || 'PMDev'}
                       </Typography>
 
@@ -241,11 +241,6 @@ const UserProfilePage = () => {
                           <CustomTextField
                             {...field}
                             placeholder='Add a job title'
-                            className='text-gray-300'
-                            InputProps={{
-                              className: 'text-gray-300',
-                              sx: { '& input': { color: 'white' } }
-                            }}
                           />
                         )}
                       />
@@ -257,11 +252,6 @@ const UserProfilePage = () => {
                           <CustomTextField
                             {...field}
                             placeholder='Add a company name'
-                            className='text-gray-300'
-                            InputProps={{
-                              className: 'text-gray-300',
-                              sx: { '& input': { color: 'white' } }
-                            }}
                           />
                         )}
                       />
@@ -274,18 +264,18 @@ const UserProfilePage = () => {
             </Card>
 
             {/* Contact Information Card */}
-            <Card className='bg-gray-800 border-gray-700'>
+            <Card className='bg-backgroundPaper border border-divider shadow-sm'>
               <CardContent className='p-6'>
-                <Typography variant='h6' className='text-white font-semibold mb-4'>
+                <Typography variant='h6' className='text-textPrimary font-semibold mb-4'>
                   Contact Information
                 </Typography>
 
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
                     <Box className='flex items-center space-x-3'>
-                      <i className='tabler-mail text-gray-400' />
+                      <i className='tabler-mail text-textSecondary' />
                       <Box>
-                        <Typography variant='body2' className='text-gray-400'>
+                        <Typography variant='body2' className='text-textSecondary'>
                           Email
                         </Typography>
                         <Controller
@@ -304,9 +294,6 @@ const UserProfilePage = () => {
                               placeholder='Add email'
                               error={!!errors.email}
                               helperText={errors.email?.message}
-                              InputProps={{
-                                sx: { '& input': { color: 'white' } }
-                              }}
                             />
                           )}
                         />
@@ -316,9 +303,9 @@ const UserProfilePage = () => {
 
                   <Grid item xs={12} md={6}>
                     <Box className='flex items-center space-x-3'>
-                      <i className='tabler-phone text-gray-400' />
+                      <i className='tabler-phone text-textSecondary' />
                       <Box>
-                        <Typography variant='body2' className='text-gray-400'>
+                        <Typography variant='body2' className='text-textSecondary'>
                           Phone
                         </Typography>
                         <Controller
@@ -328,9 +315,6 @@ const UserProfilePage = () => {
                             <CustomTextField
                               {...field}
                               placeholder='Add a phone'
-                              InputProps={{
-                                sx: { '& input': { color: 'white' } }
-                              }}
                             />
                           )}
                         />
@@ -340,16 +324,13 @@ const UserProfilePage = () => {
 
                   <Grid item xs={12} md={6}>
                     <Box className='flex items-center space-x-3'>
-                      <i className='tabler-device-mobile text-gray-400' />
+                      <i className='tabler-device-mobile text-textSecondary' />
                       <Box>
-                        <Typography variant='body2' className='text-gray-400'>
+                        <Typography variant='body2' className='text-textSecondary'>
                           Mobile phone
                         </Typography>
                         <CustomTextField
                           placeholder='Add a mobile phone'
-                          InputProps={{
-                            sx: { '& input': { color: 'white' } }
-                          }}
                         />
                       </Box>
                     </Box>
@@ -357,9 +338,9 @@ const UserProfilePage = () => {
 
                   <Grid item xs={12} md={6}>
                     <Box className='flex items-center space-x-3'>
-                      <i className='tabler-map-pin text-gray-400' />
+                      <i className='tabler-map-pin text-textSecondary' />
                       <Box>
-                        <Typography variant='body2' className='text-gray-400'>
+                        <Typography variant='body2' className='text-textSecondary'>
                           Location
                         </Typography>
                         <Controller
@@ -369,9 +350,6 @@ const UserProfilePage = () => {
                             <CustomTextField
                               {...field}
                               placeholder='Add a location'
-                              InputProps={{
-                                sx: { '& input': { color: 'white' } }
-                              }}
                             />
                           )}
                         />
@@ -383,14 +361,14 @@ const UserProfilePage = () => {
             </Card>
 
             {/* Dates Card */}
-            <Card className='bg-gray-800 border-gray-700'>
+            <Card className='bg-backgroundPaper border border-divider shadow-sm'>
               <CardContent className='p-6'>
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
                     <Box className='flex items-center space-x-3'>
-                      <i className='tabler-gift text-gray-400' />
+                      <i className='tabler-gift text-textSecondary' />
                       <Box>
-                        <Typography variant='body2' className='text-gray-400'>
+                        <Typography variant='body2' className='text-textSecondary'>
                           Birthday
                         </Typography>
                         <Controller
@@ -400,9 +378,6 @@ const UserProfilePage = () => {
                             <CustomTextField
                               {...field}
                               placeholder='Add a birthday'
-                              InputProps={{
-                                sx: { '& input': { color: 'white' } }
-                              }}
                             />
                           )}
                         />
@@ -412,9 +387,9 @@ const UserProfilePage = () => {
 
                   <Grid item xs={12} md={6}>
                     <Box className='flex items-center space-x-3'>
-                      <i className='tabler-calendar text-gray-400' />
+                      <i className='tabler-calendar text-textSecondary' />
                       <Box>
-                        <Typography variant='body2' className='text-gray-400'>
+                        <Typography variant='body2' className='text-textSecondary'>
                           Work anniversary
                         </Typography>
                         <Controller
@@ -424,9 +399,6 @@ const UserProfilePage = () => {
                             <CustomTextField
                               {...field}
                               placeholder='Add a work anniversary'
-                              InputProps={{
-                                sx: { '& input': { color: 'white' } }
-                              }}
                             />
                           )}
                         />
@@ -438,15 +410,15 @@ const UserProfilePage = () => {
             </Card>
 
             {/* Assigned Boards Card */}
-            <Card className='bg-gray-800 border-gray-700'>
+            <Card className='bg-backgroundPaper border border-divider shadow-sm'>
               <CardContent className='p-6'>
-                <Typography variant='h6' className='text-white font-semibold mb-4'>
+                <Typography variant='h6' className='text-textPrimary font-semibold mb-4'>
                   My assigned boards
                 </Typography>
 
                 <Box className='flex items-center space-x-3'>
-                  <i className='tabler-file-text text-gray-400' />
-                  <Typography className='text-white'>Trial Develop New Monday</Typography>
+                  <i className='tabler-file-text text-textSecondary' />
+                  <Typography className='text-textPrimary'>Trial Develop New Monday</Typography>
                 </Box>
               </CardContent>
             </Card>
@@ -456,7 +428,7 @@ const UserProfilePage = () => {
                 variant='outlined'
                 onClick={() => reset()}
                 disabled={loading}
-                className='text-white border-gray-500 hover:border-gray-400'
+                className='border-divider text-textPrimary hover:bg-actionHover'
               >
                 Reset
               </Button>
@@ -475,9 +447,9 @@ const UserProfilePage = () => {
 
       case 'password':
         return (
-          <Card className='bg-gray-800 border-gray-700'>
+          <Card className='bg-backgroundPaper border border-divider shadow-sm'>
             <CardContent className='p-6'>
-              <Typography variant='h6' className='text-white font-semibold mb-4'>
+              <Typography variant='h6' className='text-textPrimary font-semibold mb-4'>
                 Change Password
               </Typography>
 
@@ -495,8 +467,7 @@ const UserProfilePage = () => {
                           <InputAdornment position='start'>
                             <i className='tabler-lock' />
                           </InputAdornment>
-                        ),
-                        sx: { '& input': { color: 'white' } }
+                        )
                       }}
                     />
                   </Grid>
@@ -513,8 +484,7 @@ const UserProfilePage = () => {
                           <InputAdornment position='start'>
                             <i className='tabler-key' />
                           </InputAdornment>
-                        ),
-                        sx: { '& input': { color: 'white' } }
+                        )
                       }}
                     />
                   </Grid>
@@ -531,8 +501,7 @@ const UserProfilePage = () => {
                           <InputAdornment position='start'>
                             <i className='tabler-key' />
                           </InputAdornment>
-                        ),
-                        sx: { '& input': { color: 'white' } }
+                        )
                       }}
                     />
                   </Grid>
@@ -556,12 +525,12 @@ const UserProfilePage = () => {
 
       default:
         return (
-          <Card className='bg-gray-800 border-gray-700'>
+          <Card className='bg-backgroundPaper border border-divider shadow-sm'>
             <CardContent className='p-6'>
-              <Typography variant='h6' className='text-white font-semibold mb-4'>
+              <Typography variant='h6' className='text-textPrimary font-semibold mb-4'>
                 {navigationItems.find(item => item.id === activeTab)?.label}
               </Typography>
-              <Typography className='text-gray-400'>This section is coming soon...</Typography>
+              <Typography className='text-textSecondary'>This section is coming soon...</Typography>
             </CardContent>
           </Card>
         )
@@ -569,7 +538,7 @@ const UserProfilePage = () => {
   }
 
   return (
-    <Box className='min-h-screen bg-gray-900'>
+    <Box className='min-h-screen bg-backgroundDefault'>
       {/* Notification Banner */}
       <Box className='bg-purple-600 text-white p-3 flex items-center justify-center space-x-4'>
         <Typography variant='body2'>Enable desktop notifications on this computer</Typography>
@@ -583,8 +552,8 @@ const UserProfilePage = () => {
 
       <Box className='flex'>
         {/* Sidebar */}
-        <Box className='w-64 bg-gray-800 min-h-screen p-6'>
-          <Typography variant='h4' className='text-white font-bold mb-8'>
+        <Box className='w-64 bg-backgroundPaper border-r border-divider min-h-screen p-6'>
+          <Typography variant='h4' className='text-textPrimary font-bold mb-8'>
             Profile
           </Typography>
 
@@ -594,12 +563,12 @@ const UserProfilePage = () => {
                 key={item.id}
                 button
                 onClick={() => setActiveTab(item.id)}
-                className={`rounded-lg mb-2 ${activeTab === item.id ? 'bg-purple-600' : 'hover:bg-gray-700'}`}
+                className={`rounded-lg mb-2 ${activeTab === item.id ? 'bg-purple-600' : 'hover:bg-actionHover'}`}
               >
                 <ListItemIcon>
-                  <i className={`${item.icon} ${activeTab === item.id ? 'text-white' : 'text-gray-400'}`} />
+                  <i className={`${item.icon} ${activeTab === item.id ? 'text-white' : 'text-textSecondary'}`} />
                 </ListItemIcon>
-                <ListItemText primary={item.label} className={activeTab === item.id ? 'text-white' : 'text-gray-300'} />
+                <ListItemText primary={item.label} className={activeTab === item.id ? 'text-white' : 'text-textPrimary'} />
               </ListItem>
             ))}
           </List>

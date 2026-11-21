@@ -83,22 +83,22 @@ export default function BoardList({ boards }) {
               <Link href={`/board/${board.boardId}`} passHref>
                 <Box
                   component='a'
-                  className='relative group border border-gray-700 rounded-lg hover:border-blue-500 transition-colors cursor-pointer block'
+                  className='relative group border border-divider rounded-lg hover:border-primary-main transition-colors cursor-pointer block bg-backgroundPaper'
                 >
                   {/* Tombol menu aksi (...) */}
                   <IconButton
                     size='small'
                     onClick={e => handleOpenMenu(e, board)}
-                    className='absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity !bg-gray-600/50 hover:!bg-gray-500/70'
+                    className='absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity !bg-actionHover hover:!bg-actionSelected'
                     aria-controls={menuAnchorEl ? 'board-actions-menu' : undefined}
                     aria-haspopup='true'
                     aria-expanded={menuAnchorEl ? 'true' : undefined}
                   >
-                    <i className='tabler-dots text-white' />
+                    <i className='tabler-dots text-textPrimary' />
                   </IconButton>
 
-                  <Box className='h-24 bg-gray-700 rounded-t-lg flex items-center justify-center'>
-                    <i className='tabler-layout-kanban text-4xl text-gray-500' />
+                  <Box className='h-24 bg-actionHover rounded-t-lg flex items-center justify-center'>
+                    <i className='tabler-layout-kanban text-4xl text-textDisabled' />
                   </Box>
                   <div className='p-3 flex justify-between items-center'>
                     <Typography className='font-medium text-textPrimary'>{board.boardName}</Typography>
@@ -108,7 +108,7 @@ export default function BoardList({ boards }) {
                         e.preventDefault() /* Logika favorit */
                       }}
                     >
-                      <i className='tabler-star text-gray-500 hover:text-yellow-400' />
+                      <i className='tabler-star text-textDisabled hover:text-warning-main' />
                     </IconButton>
                   </div>
                 </Box>

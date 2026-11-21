@@ -47,6 +47,7 @@ export default function CreateBoardDialog({ open, onClose, workspaceId, onBoardC
 
       if (!res.ok) {
         const errorData = await res.json()
+
         throw new Error(errorData.message || 'Failed')
       }
 
@@ -122,7 +123,7 @@ export default function CreateBoardDialog({ open, onClose, workspaceId, onBoardC
                 </MenuItem>
               ))}
             </Select>
-            {isLoading && <p className='text-xs text-gray-400 mt-1'>Loading templates...</p>}
+            {isLoading && <p className='text-xs text-textSecondary mt-1'>Loading templates...</p>}
 
           </FormControl>
 
@@ -141,6 +142,7 @@ export default function CreateBoardDialog({ open, onClose, workspaceId, onBoardC
                 accept=".xlsx, .xls"
                 onChange={(e) => {
                   const file = e.target.files[0]
+
                   setImportFile(file)
                   if (file) setSelectedTemplate('') // Clear template if file selected
                 }}

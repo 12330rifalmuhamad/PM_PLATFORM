@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+
 import classNames from 'classnames'
 
-import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
 // Third-party Imports
 
@@ -128,6 +128,8 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
   import { useDragAndDrop } from '@formkit/drag-and-drop/react'
   import { animations } from '@formkit/drag-and-drop'
 
+import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+
     import ItemDetailPanel from './../ItemDetailPanel'
   import InviteMemberDialog from './InviteMemberDialog'
   import ProgressColumnSettingsModal from './ProgressColumnSettingsModal'
@@ -182,19 +184,28 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
   const parsePersonValue = (value, board) => {
     if (!value) return [];
+
     try {
       if (typeof value === 'string' && value.startsWith('[')) {
         const userIds = JSON.parse(value);
-        return userIds.map(id => findUserById(id, board)).filter(Boolean);
+
+        
+return userIds.map(id => findUserById(id, board)).filter(Boolean);
       }
+
       if (Array.isArray(value)) {
         return value.map(id => findUserById(id, board)).filter(Boolean);
       }
+
       const user = findUserById(value, board);
-      return user ? [user] : [];
+
+      
+return user ? [user] : [];
     } catch (e) {
       const user = findUserById(value, board);
-      return user ? [user] : [];
+
+      
+return user ? [user] : [];
     }
   }
 
@@ -212,7 +223,9 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
     if (users.length === 1) {
       const user = users[0]
       const name = user.userName || user.name || 'User'
-      return (
+
+      
+return (
         <Tooltip title={name}>
           <MuiAvatar src={user.txtImage} sx={{ width: { xs: 24, md: 28 }, height: { xs: 24, md: 28 }, fontSize: { xs: '0.875rem', md: '0.875rem' }, bgcolor: 'primary.main', color: 'primary.contrastText', cursor: 'pointer' }}>
             {name.charAt(0).toUpperCase()}
@@ -225,7 +238,9 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
       <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: { xs: 24, md: 28 }, height: { xs: 24, md: 28 }, fontSize: '0.875rem', borderColor: 'var(--mui-palette-background-paper)' } }}>
         {users.map(u => {
           const name = u.userName || u.name || 'User'
-          return (
+
+          
+return (
             <Tooltip key={u.userId} title={name}>
               <MuiAvatar src={u.txtImage} sx={{ bgcolor: 'primary.main', color: 'primary.contrastText', cursor: 'pointer' }}>
                 {name.charAt(0).toUpperCase()}
@@ -268,6 +283,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
   const StatusCell = ({ value, column }) => {
     const theme = useTheme()
+
     const options = useMemo(() => {
       if (column.options?.length > 0) {
         return column.options.map(opt => ({
@@ -335,7 +351,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
             return (
               <span
                 key='more'
-                className='text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full border border-gray-200'
+                className='text-[10px] bg-actionHover text-textSecondary px-1.5 py-0.5 rounded-full border border-divider'
               >
                 +{tags.length - 1}
               </span>
@@ -381,7 +397,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
               target='_blank'
               rel='noopener noreferrer'
               onClick={e => e.stopPropagation()}
-              className='flex items-center justify-center text-primary bg-white shadow-sm hover:bg-gray-50 p-1 rounded-full'
+              className='flex items-center justify-center text-primary bg-backgroundPaper border border-divider shadow-sm hover:bg-actionHover p-1 rounded-full'
               title='Open file'
             >
               <i className='tabler-external-link text-xs' />
@@ -394,7 +410,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                 e.stopPropagation()
                 onListClick(e)
               }}
-              className='flex items-center justify-center text-info bg-white shadow-sm hover:bg-gray-50 p-1 rounded-full'
+              className='flex items-center justify-center text-info bg-backgroundPaper border border-divider shadow-sm hover:bg-actionHover p-1 rounded-full'
               title='View all files'
             >
               <i className='tabler-list text-xs' />
@@ -406,7 +422,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
   }
 
   const LinkCell = ({ value }) => {
-    if (!value) return <span className='text-gray-500'>—</span>
+    if (!value) return <span className='text-textDisabled'>—</span>
     let href = value
 
     if (!href.startsWith('http://') && !href.startsWith('https://')) {
@@ -685,6 +701,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                         className='absolute right-0 top-0 h-full w-3 cursor-col-resize hover:bg-primary/30 transition-colors z-50 touch-none after:content-[""] after:absolute after:right-0 after:top-0 after:w-[1px] after:h-full after:bg-divider group-hover:after:bg-primary'
                         onMouseDown={e => {
                           const currentWidth = columnWidths[col.columnId] || col.width || 200
+
                           onColumnResizeStart(e, col.columnId, currentWidth)
                         }}
                         onClick={e => e.stopPropagation()}
@@ -736,7 +753,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                     ))}
                     <td className='w-8 text-center'>
                       <button
-                        className='opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity'
+                        className='opacity-0 group-hover:opacity-100 text-textDisabled hover:text-error-main transition-opacity'
                         onClick={e => {
                           e.stopPropagation()
                           if (confirm('Delete subitem?')) onDeleteSubitem(parentItem.taskId, sub.taskId)
@@ -751,7 +768,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                   <Box component='td' colSpan={1} sx={{ borderRight: 1, borderColor: 'divider', p: 0, height: 32 }}>
                     <input
                       type='text'
-                      className='w-full h-full px-3 text-sm bg-transparent outline-none placeholder:text-gray-400 transition-colors'
+                      className='w-full h-full px-3 text-sm bg-transparent outline-none placeholder:text-textDisabled transition-colors'
                       placeholder='+ Add subitem'
                       value={newSubTitle}
                       onChange={e => setNewSubTitle(e.target.value)}
@@ -816,7 +833,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
             <Typography variant='subtitle2' fontWeight='bold'>
               Set dates
             </Typography>
-            <Typography variant='caption' className='bg-gray-100 px-2 py-0.5 rounded'>
+            <Typography variant='caption' className='bg-actionHover text-textSecondary px-2 py-0.5 rounded'>
               {duration} days
             </Typography>
           </div>
@@ -951,7 +968,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             InputProps={{
-              startAdornment: <i className='tabler-search text-gray-400 mr-2 text-sm' />,
+              startAdornment: <i className='tabler-search text-textDisabled mr-2 text-sm' />,
               style: { fontSize: '0.875rem' }
             }}
           />
@@ -987,7 +1004,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
             </ListItemButton>
           )}
           {filteredTags.length === 0 && !isNewTag && (
-            <Typography variant='caption' className='block text-center py-4 text-gray-400'>
+            <Typography variant='caption' className='block text-center py-4 text-textDisabled'>
               No tags found
             </Typography>
           )}
@@ -1052,7 +1069,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
               const isEditing = editingId === (tag.id || tag.label)
 
               return (
-                <Box key={idx} className='flex items-center justify-between py-2 border-b border-gray-100 last:border-0'>
+                <Box key={idx} className='flex items-center justify-between py-2 border-b border-divider last:border-0'>
                   <div className='flex items-center gap-2 flex-1'>
                     <div
                       className={`w-5 h-5 rounded-full cursor-pointer ${tag.color}`}
@@ -1078,18 +1095,18 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                   <div className='flex gap-1'>
                     {!isEditing && (
                       <IconButton size='small' onClick={() => handleStartEdit(tag)}>
-                        <i className='tabler-pencil text-gray-400 text-sm' />
+                        <i className='tabler-pencil text-textDisabled text-sm' />
                       </IconButton>
                     )}
                     <IconButton size='small' onClick={() => onDeleteOption(tag)}>
-                      <i className='tabler-trash text-gray-400 hover:text-red-500 text-sm' />
+                      <i className='tabler-trash text-textDisabled hover:text-error-main text-sm' />
                     </IconButton>
                   </div>
                 </Box>
               )
             })}
             {tags.length === 0 && (
-              <Typography variant='caption' className='text-gray-400 text-center block'>
+              <Typography variant='caption' className='text-textDisabled text-center block'>
                 No tags created yet
               </Typography>
             )}
@@ -1159,7 +1176,8 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
     const initialOptions = useMemo(() => {
       const getOptionTextColor = (bgColor) => {
         if (!bgColor) return 'text-white'
-        return bgColor.includes('/10') || bgColor.includes('gray') ? 'text-gray-400' : 'text-white'
+        
+return bgColor.includes('/10') || bgColor.includes('gray') ? 'text-gray-400' : 'text-white'
       }
 
       const options = column.options?.length
@@ -1203,15 +1221,19 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
         } catch (e) {
           setSelectedPersons([column.currentValue])
         }
+
         setPersonSearch('')
       }
     }, [open, column])
 
     const filteredMembers = useMemo(() => {
       if (!board?.boardMember) return []
-      return board.boardMember.filter(m => {
+      
+return board.boardMember.filter(m => {
         const name = m.mUser?.userName || m.mUser?.name || ''
-        return name.toLowerCase().includes(personSearch.toLowerCase())
+
+        
+return name.toLowerCase().includes(personSearch.toLowerCase())
       })
     }, [board?.boardMember, personSearch])
 
@@ -1243,6 +1265,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
     const handleSaveLabels = async (customLabels = null) => {
       setIsLoading(true)
+
       // Ensure we only use plain data and not event objects
       const rawLabels = (customLabels && Array.isArray(customLabels)) ? customLabels : labels
       
@@ -1259,6 +1282,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
         if (newOpt && newOpt.label !== originalOpt.label) renameMap[originalOpt.label] = newOpt.label
       })
+
       const optionsToSave = labelsToProcess.map(({ label, color }) => ({ 
         label, 
         color: color.split(' ')[0] 
@@ -1435,6 +1459,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                             e.preventDefault();
                             e.stopPropagation();
                             const newLabelName = quickAddLabel.trim();
+
                             await handleQuickAdd();
                             onValueSelect(newLabelName);
                             onClose();
@@ -1448,6 +1473,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                                 <InputAdornment position="end">
                                     <IconButton size="small" onClick={async () => {
                                         const newLabelName = quickAddLabel.trim();
+
                                         await handleQuickAdd();
                                         onValueSelect(newLabelName);
                                         onClose();
@@ -1674,7 +1700,9 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
         try {
           const decodedUrl = decodeURIComponent(url)
           const filename = decodedUrl.split('/').pop().substring(decodedUrl.indexOf('_') + 1) // Removed timestamp prefix logic if it exists
-          return { url, name: filename || 'File' }
+
+          
+return { url, name: filename || 'File' }
         } catch (e) {
           return { url, name: 'File' }
         }
@@ -1854,7 +1882,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                     onChange={e => handleFilterChange(filter.id, 'columnId', e.target.value)}
                     displayEmpty
                     renderValue={selected => {
-                      if (!selected) return <span className='text-gray-400'>Column</span>
+                      if (!selected) return <span className='text-textDisabled'>Column</span>
                       if (selected === 'item_title') return 'Item Name'
 
                       return columns.find(c => c.columnId === selected)?.columnName || 'Unknown'
@@ -1955,7 +1983,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
               displayEmpty
               onChange={e => onSortChange(e.target.value, sortConfig.direction)}
               renderValue={selected => {
-                if (!selected) return <span className='text-gray-400'>Choose column</span>
+                if (!selected) return <span className='text-textDisabled'>Choose column</span>
                 const opt = sortOptions.find(o => String(o.id) === String(selected))
 
                 return opt ? opt.label : selected
@@ -2072,9 +2100,11 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
     const [sortAnchor, setSortAnchor] = useState(null)
     const [sortConfig, setSortConfig] = useState({ columnId: null, direction: 'asc' })
     const [expandedItemIds, setExpandedItemIds] = useState([])
+
     const [collapsedGroups, setCollapsedGroups] = useState(() => {
       if (!board?.groups) return []
-      return board.groups.filter(g => g.bitCollapsed === 1).map(g => g.groupId)
+      
+return board.groups.filter(g => g.bitCollapsed === 1).map(g => g.groupId)
     })
 
     const [columnWidths, setColumnWidths] = useState({})
@@ -2087,9 +2117,11 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
     const handleDirectFileChange = async event => {
         const file = event.target.files[0]
+
         if (!file || !uploadTarget.item || !uploadTarget.column) return
     
         const formData = new FormData()
+
         formData.append('file', file)
     
         try {
@@ -2166,6 +2198,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
     const toggleGroupCollapse = async groupId => {
       const isCollapsing = !collapsedGroups.includes(groupId)
+
       const newCollapsed = isCollapsing
         ? [...collapsedGroups, groupId]
         : collapsedGroups.filter(id => id !== groupId)
@@ -2176,6 +2209,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
       const newGroups = groups.map(g => 
         g.groupId === groupId ? { ...g, bitCollapsed: isCollapsing ? 1 : 0 } : g
       )
+
       // We don't necessarily need to trigger a full SWR revalidation for this UI state,
       // but keeping local state in sync is good.
       // await updateOptimisticGroups(newGroups) // Optional: might cause flicker if revalidating
@@ -2208,6 +2242,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
           width: c.width || 200 // Use DB width or default
         }))
     }, [board?.columns])
+
     const headerColumnsRef = useRef(initialColumnsForDnD)
     
 
@@ -2259,6 +2294,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
           if (searchQuery) {
             const query = searchQuery.toLowerCase()
             const titleMatch = (item.taskTitle || '').toLowerCase().includes(query)
+
             if (!titleMatch) return false
           }
 
@@ -2273,8 +2309,10 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
               itemValue = valObj ? valObj.value : ''
 
               const colDef = board.columns.find(c => normalizeId(c.columnId) === normalizeId(filter.columnId))
+
               if (colDef && colDef.columnType === 'PERSON' && itemValue) {
                 const users = parsePersonValue(itemValue, board)
+
                 itemValue = users.map(u => u.userName || u.name).join(', ')
               }
             }
@@ -2509,6 +2547,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
       if (targetIndex >= 0 && targetIndex < headerColumns.length) {
         const newColumns = [...headerColumns]
         const [movedCol] = newColumns.splice(currentIndex, 1)
+
         newColumns.splice(targetIndex, 0, movedCol)
 
         setHeaderColumns(newColumns)
@@ -2533,6 +2572,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
     const handleMoveRow = async (direction, taskId, groupId) => {
       const group = groups.find(g => g.groupId === groupId)
+
       if (!group) return
       const items = group.items
       const currentIndex = items.findIndex(i => i.taskId === taskId)
@@ -2543,10 +2583,14 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
           if (g.groupId === groupId) {
             const newItems = [...g.items]
             const [movedItem] = newItems.splice(currentIndex, 1)
+
             newItems.splice(targetIndex, 0, movedItem)
-            return { ...g, items: newItems }
+            
+return { ...g, items: newItems }
           }
-          return g
+
+          
+return g
         })
 
         await updateOptimisticGroups(newGroups)
@@ -2591,6 +2635,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
     const handleUpdateGroupColor = async (groupId, newColor) => {
       const newGroups = groups.map(g => (g.groupId === groupId ? { ...g, groupColor: newColor } : g))
+
       await updateOptimisticGroups(newGroups)
 
       try {
@@ -2942,6 +2987,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
               // API Call
               try {
                   const groupIds = newGroups.map(g => g.groupId)
+
                   await fetch(`/api/boards/${board.boardId}/groups/reorder`, {
                       method: 'PUT',
                       headers: {'Content-Type': 'application/json'},
@@ -2952,7 +2998,9 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                  mutate(boardApiEndpoint)
               }
           }
-          return
+
+          
+return
       }
 
       if (active.id !== over?.id) {
@@ -2974,7 +3022,9 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                 if (g.groupId === sourceGroup.groupId) {
                   return { ...g, items: newItems }
                 }
-                return g
+
+                
+return g
               })
               
               mutate(boardApiEndpoint, { ...board, groups: newGroups }, false) // false = no revalidate yet
@@ -3116,9 +3166,11 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
     const handleFileChange = async event => {
       const file = event.target.files[0]
+
       if (!file) return
 
       setIsImporting(true)
+
       try {
         const data = await file.arrayBuffer()
         const workbook = XLSX.read(data)
@@ -3127,7 +3179,8 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
         if (jsonData.length === 0) {
           alert('Excel file appears to be empty')
-          return
+          
+return
         }
 
         const response = await fetch(`/api/boards/${board.boardId}/import`, {
@@ -3139,6 +3192,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
         if (!response.ok) throw new Error('Import failed')
 
         const result = await response.json()
+
         alert(result.message)
         mutate(boardApiEndpoint) // Refresh board data
       } catch (error) {
@@ -3174,6 +3228,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
             // Format specific column types if needed
             if (col.columnType === 'PERSON' && cellValue) {
               const users = parsePersonValue(cellValue, board)
+
               cellValue = users.length > 0 ? users.map(u => u.userName || u.name).join(', ') : cellValue
             }
 
@@ -3186,6 +3241,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
       const worksheet = XLSX.utils.json_to_sheet(rows)
       const workbook = XLSX.utils.book_new()
+
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Board Data')
       XLSX.writeFile(workbook, `${board.boardName} - ${new Date().toISOString().split('T')[0]}.xlsx`)
     }
@@ -3633,19 +3689,19 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                                   cellContent = (
                                     <div className='flex items-center gap-2'>
                                       <div
-                                        className='cursor-pointer p-1 hover:bg-gray-200 rounded transition-colors flex items-center justify-center'
+                                        className='cursor-pointer p-1 hover:bg-actionHover rounded transition-colors flex items-center justify-center'
                                         onClick={e => {
                                           e.stopPropagation()
                                           toggleExpandItem(item.taskId)
                                         }}
                                       >
                                         <i
-                                          className={`tabler-chevron-right text-gray-400 transition-transform ${expandedItemIds.includes(item.taskId) ? 'rotate-90' : ''}`}
+                                          className={`tabler-chevron-right text-textDisabled transition-transform ${expandedItemIds.includes(item.taskId) ? 'rotate-90' : ''}`}
                                         />
                                       </div>
                                       <span className='truncate font-medium text-textPrimary'>{item.taskTitle}</span>
                                       {(item.subItems?.length || 0) > 0 && (
-                                        <span className='text-[10px] bg-gray-100 text-gray-500 px-1 rounded border ml-1'>
+                                        <span className='text-[10px] bg-actionHover text-textSecondary px-1 rounded border border-divider ml-1'>
                                           {item.subItems.length}
                                         </span>
                                       )}
@@ -3654,11 +3710,13 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                                 } else {
                                   cellContent = <span className='truncate block w-full' title={cellValue?.value}>{cellValue?.value || '—'}</span>
                                 }
+
                                 break
                             }
 
                             if (isItemColumn) {
                                 const itemContent = cellContent
+
                                 cellContent = (
                                     <div className="flex items-center w-full h-full gap-2 pl-1">
                                         <div
@@ -3695,7 +3753,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                                           data-checked={isSelected}
                                         />
 
-                                        <div className="w-[1px] h-4 bg-gray-200 mx-1"></div>
+                                        <div className="w-[1px] h-4 bg-divider mx-1"></div>
 
                                         <div className="flex-1 overflow-hidden">
                                           {itemContent}
@@ -3863,7 +3921,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                     </td>
                     <td colSpan={visibleColumns.length} className='border-r border-divider border-b'></td>
                   </tr>
-                  <tr className='bg-backgroundPaper border-t border-gray-700'>
+                  <tr className='bg-backgroundPaper border-t border-divider'>
                     {visibleColumns.map(column => {
                       let summaryContent = null
                       const calcType = column.calculationType || 'Sum'
@@ -3872,20 +3930,23 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
                       if (isItemColumn)
                         summaryContent = (
-                          <Typography variant='caption' className='text-gray-400 px-3 pl-8'>
+                          <Typography variant='caption' className='text-textSecondary px-3 pl-8'>
                             Count: {group.items?.length || 0}
                           </Typography>
                         )
                       else if (column.columnName === 'Status') {
                         const summary = getStatusSummary(group)
+
                         summaryContent = (
                           <div className='flex h-4 rounded-sm overflow-hidden mx-2'>
                             {Object.entries(summary).map(([status, count]) => {
                               let bgColor = 'bg-gray-500'
+
                               if (status === 'Selesai') bgColor = 'bg-green-500'
                               else if (status === 'Sedang Dikerjakan') bgColor = 'bg-yellow-500'
                               else if (status === 'Buntu') bgColor = 'bg-red-500'
-                              return (
+                              
+return (
                                 <div
                                   key={status}
                                   className={bgColor}
@@ -3898,6 +3959,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                         )
                       } else if (column.columnType === 'NUMBER') {
                         const result = calculateSummary(group.items, column.columnId, calcType)
+
                         summaryContent = (
                           <Button
                             onClick={e => handleOpenCalcMenu(e, column)}
@@ -3954,7 +4016,9 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
                 {GROUP_COLORS.map(color => { 
                   const currentGroup = groups.find(g => g.groupId === menuAnchor.id)
                   const isSelected = currentGroup?.groupColor === color
-                  return (
+
+                  
+return (
                     <div
                       key={color}
                       onClick={() => handleUpdateGroupColor(menuAnchor.id, color)}
@@ -4041,6 +4105,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
             onDelete={async (fileUrlToDelete) => {
               const { item, column } = fileListPopover
               const cellValue = (item?.values || []).find(v => normalizeId(v.columnId) === normalizeId(column?.columnId))?.value
+
               if (!cellValue) return
 
               const currentFiles = cellValue.split(',')
@@ -4284,7 +4349,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
           onSave={handleSaveAsTemplate}
         />
         {selectedTaskIds.length > 0 && (
-          <div className='fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-white dark:bg-gray-800 shadow-xl border border-divider rounded-full px-6 py-3 flex items-center gap-4 animate-in slide-in-from-bottom-4 fade-in duration-300'>
+          <div className='fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-backgroundPaper shadow-xl border border-divider rounded-full px-6 py-3 flex items-center gap-4 animate-in slide-in-from-bottom-4 fade-in duration-300'>
             <div className='flex items-center gap-2 border-r border-divider pr-4'>
               <div className='bg-primary main text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center'>
                 {selectedTaskIds.length}

@@ -28,10 +28,13 @@ const InviteMemberDialog = ({ open, onClose, boardId, onMemberAdded }) => {
       if (value.length < 2) return
 
       setLoading(true)
+
       try {
           const res = await fetch(`/api/users/search?q=${value}`)
+
           if (res.ok) {
               const users = await res.json()
+
               setOptions(users)
           }
       } catch (error) {
@@ -48,9 +51,11 @@ const InviteMemberDialog = ({ open, onClose, boardId, onMemberAdded }) => {
   const loadMembers = async () => {
     if (!boardId) return
     setLoadingMembers(true)
+
     try {
         const res = await fetch(`/api/boards/${boardId}/members`)
         const data = await res.json()
+
         setMembers(Array.isArray(data) ? data : [])
     } catch (e) {
         console.error("Failed to load members", e)
@@ -73,11 +78,15 @@ const InviteMemberDialog = ({ open, onClose, boardId, onMemberAdded }) => {
     
     try {
         const res = await fetch(`/api/boards/${boardId}/members/${userId}`, { method: 'DELETE' })
+
         if (!res.ok) {
             const err = await res.json()
+
             alert(err.message || 'Failed to remove member')
-            return
+            
+return
         }
+
         loadMembers() // Refresh list
     } catch (e) {
         console.error("Failed to remove member", e)
@@ -89,6 +98,7 @@ const InviteMemberDialog = ({ open, onClose, boardId, onMemberAdded }) => {
       if (!selectedUser) return
  
       setInviting(true)
+
       try {
           const res = await fetch(`/api/boards/${boardId}/members`, {
               method: 'POST',
@@ -98,11 +108,14 @@ const InviteMemberDialog = ({ open, onClose, boardId, onMemberAdded }) => {
  
           if (!res.ok) {
               const err = await res.json()
+
               alert(err.message || 'Failed to invite')
-              return
+              
+return
           }
  
           const newMember = await res.json()
+
           if (onMemberAdded) onMemberAdded(newMember)
           
           // Clear selection but keep dialog open to show updated list
@@ -194,11 +207,11 @@ const InviteMemberDialog = ({ open, onClose, boardId, onMemberAdded }) => {
                         const isOwner = m.role?.toLowerCase() === 'owner'
                         
                         return (
-                            <div key={String(m.boardMemberId)} className='flex items-center justify-between p-2 rounded-lg border border-divider hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group'>
+                            <div key={String(m.boardMemberId)} className='flex items-center justify-between p-2 rounded-lg border border-divider hover:bg-actionHover transition-colors group'>
                                 <div className='flex items-center gap-3'>
                                     <Avatar sx={{ width: 32, height: 32, fontSize: '0.8rem' }}>{name.charAt(0)}</Avatar>
                                     <div>
-                                        <div className='text-sm font-medium flex items-center gap-1'>
+                                        <div className='text-sm font-medium flex items-center gap-1 text-textPrimary'>
                                             {name}
                                             {isOwner && <i className='tabler-crown text-amber-500 text-[10px]' />}
                                         </div>
@@ -206,7 +219,7 @@ const InviteMemberDialog = ({ open, onClose, boardId, onMemberAdded }) => {
                                     </div>
                                 </div>
                                 <Button 
-                                    className='opacity-0 group-hover:opacity-100 min-w-0 p-1 text-gray-400 hover:text-red-500 transition-opacity'
+                                    className='opacity-0 group-hover:opacity-100 min-w-0 p-1 text-textDisabled hover:text-error-main transition-opacity'
                                     onClick={() => handleRemoveMember(m.userId)}
                                 >
                                     <i className='tabler-trash' />

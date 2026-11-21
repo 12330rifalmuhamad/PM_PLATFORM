@@ -199,7 +199,7 @@ const GanttView = ({ board }) => {
   if (!hasTimeline && !hasLegacyDates) {
     return (
       <div
-        className={`flex flex-col items-center justify-center h-64 rounded-lg border border-dashed ${isDarkMode ? 'bg-[#2f3349] border-[#434968] text-[#b6bee3]' : 'bg-gray-50 border-gray-300 text-gray-500'}`}
+        className='flex flex-col items-center justify-center h-64 rounded-lg border border-dashed border-divider bg-backgroundDefault text-textSecondary'
       >
         <i className='tabler-chart-bar text-4xl mb-2 opacity-50' />
         <p>
@@ -211,7 +211,7 @@ const GanttView = ({ board }) => {
 
   return (
     <div
-      className={`w-full border rounded-lg overflow-hidden shadow-sm ${isDarkMode ? 'border-[#434968]' : 'border-gray-200'}`}
+      className='w-full border border-divider rounded-lg overflow-hidden shadow-sm bg-backgroundPaper'
     >
       <div
         ref={ganttContainer}

@@ -73,14 +73,14 @@ export default function ItemDetailPanel({ item, board, onClose }) {
   }
 
   return (
-    <div className='fixed top-0 right-0 h-full w-full md:w-1/3 bg-gray-800 shadow-2xl z-[2000] transform transition-transform duration-300 ease-in-out translate-x-0'>
-      <Card className='h-full flex flex-col !bg-gray-800 !text-white'>
+    <div className='fixed top-0 right-0 h-full w-full md:w-1/3 bg-backgroundPaper border-l border-divider shadow-2xl z-[2000] transform transition-transform duration-300 ease-in-out translate-x-0'>
+      <Card className='h-full flex flex-col bg-backgroundPaper text-textPrimary'>
         {/* Header Panel */}
-        <CardContent className='flex items-center justify-between border-b border-gray-700'>
+        <CardContent className='flex items-center justify-between border-b border-divider'>
           <Typography variant='h6' className='!font-semibold'>
             {item.taskTitle}
           </Typography>
-          <IconButton onClick={onClose} className='!text-gray-400'>
+          <IconButton onClick={onClose} className='!text-textSecondary hover:!text-textPrimary'>
             <i className='tabler-x' />
           </IconButton>
         </CardContent>
@@ -95,7 +95,7 @@ export default function ItemDetailPanel({ item, board, onClose }) {
           {error && <Typography color='error'>Gagal memuat updates.</Typography>}
           <div className='space-y-6'>
             {Array.isArray(updates) && updates.length === 0 && !isLoading && !error && (
-              <Typography variant='body2' className='text-gray-400 text-center py-4'>
+              <Typography variant='body2' className='text-textSecondary text-center py-4'>
                 Belum ada update untuk task ini.
               </Typography>
             )}
@@ -113,12 +113,12 @@ export default function ItemDetailPanel({ item, board, onClose }) {
 
                   return <Avatar>{initial}</Avatar>
                 })()}
-                <div className='flex-1 bg-gray-700 p-3 rounded-lg'>
+                <div className='flex-1 bg-actionHover border border-divider p-3 rounded-lg'>
                   <div className='flex justify-between items-center mb-1'>
                     <Typography variant='subtitle2' className='!font-bold'>
                       {update?.user?.userName || update?.user?.name || 'User'}
                     </Typography>
-                    <Typography variant='caption' className='text-gray-400'>
+                    <Typography variant='caption' className='text-textSecondary'>
                       {new Date(update.dtmInserted).toLocaleString('id-ID')}
                     </Typography>
                   </div>
@@ -130,7 +130,7 @@ export default function ItemDetailPanel({ item, board, onClose }) {
         </CardContent>
 
         {/* Form Input Update Baru */}
-        <CardContent className='border-t border-gray-700'>
+        <CardContent className='border-t border-divider'>
           <div className='flex gap-4'>
             {(() => {
               const me = session?.user
@@ -147,7 +147,7 @@ export default function ItemDetailPanel({ item, board, onClose }) {
                 placeholder='Write an update...'
                 value={newUpdateText}
                 onChange={e => setNewUpdateText(e.target.value)}
-                InputProps={{ className: '!text-white !bg-gray-700' }}
+                className='bg-backgroundDefault rounded'
               />
               <Button variant='contained' className='!mt-2' onClick={handlePostUpdate} disabled={!newUpdateText.trim()}>
                 Post
