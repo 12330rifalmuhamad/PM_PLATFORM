@@ -23,7 +23,10 @@ export default function ItemDetailPanel({ item, board, onClose }) {
   const [newUpdateText, setNewUpdateText] = useState('')
 
   const updatesUrl = `/api/tasks/${item.taskId}/updates`
-  const { data: updates, error, isLoading } = useSWR(updatesUrl, fetcher)
+  const { data: updates, error, isLoading } = useSWR(updatesUrl, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 3000
+  })
 
   const handlePostUpdate = async () => {
     if (!newUpdateText.trim()) return

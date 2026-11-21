@@ -1,16 +1,8 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-
-const prisma = new PrismaClient()
-
-// Fix BigInt serialization
-if (!BigInt.prototype.toJSON) {
-  BigInt.prototype.toJSON = function () {
-    return this.toString()
-  }
-}
+import prisma from '@/libs/prisma'
 
 export async function POST(request, context) {
   const session = await getServerSession(authOptions)

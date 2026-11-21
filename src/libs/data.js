@@ -1,11 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
-
-// Patch untuk BigInt agar bisa di-pass antar Server/Client Component jika perlu
-BigInt.prototype.toJSON = function () {
-  return this.toString()
-}
+import prisma from '@/libs/prisma'
 
 export async function getBoardsForWorkspace(workspaceId, userId) {
   try {

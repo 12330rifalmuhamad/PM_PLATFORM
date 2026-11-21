@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '@/libs/prisma'
 
 export async function POST(request, { params }) {
   const { taskId } = params // Ini adalah ID parent

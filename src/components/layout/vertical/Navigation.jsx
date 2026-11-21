@@ -341,7 +341,7 @@ export default function Sidebar() {
   }, [isBreakpointReached, updateVerticalNavState])
 
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [isWorkspacesSectionOpen, setIsWorkspacesSectionOpen] = useState(true)
+  const [isWorkspacesSectionOpen, setIsWorkspacesSectionOpen] = useState(false)
   const [openWorkspaces, setOpenWorkspaces] = useState({})
 
   // --- STATES ---
@@ -374,18 +374,19 @@ export default function Sidebar() {
     return grouped
   }, [boards, workspaces])
 
-  useEffect(() => {
-    if (boards && pathname.includes('/board/')) {
-      const boardId = pathname.split('/board/')[1]
-      const currentBoard = boards.find(b => b.boardId.toString() === boardId)
-
-      if (currentBoard) {
-        const workspaceId = currentBoard.workspaceId || currentBoard.workspace?.workspaceId
-
-        if (workspaceId) setOpenWorkspaces(prev => ({ ...prev, [workspaceId]: true }))
-      }
-    }
-  }, [boards, pathname])
+  // Auto-expand dinonaktifkan agar ketika awal membuka aplikasi, semua workspace dan folder tetap collapsed
+  // useEffect(() => {
+  //   if (boards && pathname.includes('/board/')) {
+  //     const boardId = pathname.split('/board/')[1]
+  //     const currentBoard = boards.find(b => b.boardId.toString() === boardId)
+  //
+  //     if (currentBoard) {
+  //       const workspaceId = currentBoard.workspaceId || currentBoard.workspace?.workspaceId
+  //
+  //       if (workspaceId) setOpenWorkspaces(prev => ({ ...prev, [workspaceId]: true }))
+  //     }
+  //   }
+  // }, [boards, pathname])
 
   const toggleWorkspace = workspaceId => {
     if (!isBreakpointReached && isCollapsed) setIsCollapsed(false)
@@ -636,7 +637,7 @@ export default function Sidebar() {
               {Array.isArray(workspaces) &&
                 workspaces.map(workspace => {
                   const workspaceBoards = boardsByWorkspace[workspace.workspaceId] || []
-                  const isWorkspaceOpen = openWorkspaces[workspace.workspaceId] ?? true
+                  const isWorkspaceOpen = openWorkspaces[workspace.workspaceId] ?? false
 
                   return (
                     <div key={workspace.workspaceId} className='space-y-1'>

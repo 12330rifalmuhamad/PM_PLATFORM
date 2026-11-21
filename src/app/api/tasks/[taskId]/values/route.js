@@ -1,16 +1,10 @@
 import { NextResponse } from 'next/server'
 
-import { PrismaClient } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { sendMail } from '@/libs/mail'
-
-BigInt.prototype.toJSON = function () {
-  return this.toString()
-}
-
-const prisma = new PrismaClient()
+import prisma from '@/libs/prisma'
 
 export async function PATCH(request, { params }) {
   const { taskId } = await params
@@ -33,7 +27,8 @@ export async function PATCH(request, { params }) {
 
     if (!taskExists) {
       console.warn(`[API LOG] Task ${taskId} not found. Skipping update.`)
-      return NextResponse.json({ message: 'Task not found' }, { status: 404 })
+      
+return NextResponse.json({ message: 'Task not found' }, { status: 404 })
     }
 
     const column = await prisma.boardColumn.findUnique({

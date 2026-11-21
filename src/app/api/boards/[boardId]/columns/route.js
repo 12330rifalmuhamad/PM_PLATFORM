@@ -1,20 +1,8 @@
 import { NextResponse } from 'next/server'
-
-import { PrismaClient } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-
-// Patch BigInt untuk JSON serialization
-BigInt.prototype.toJSON = function () {
-  return this.toString()
-}
-
-// Best practice: Gunakan global singleton untuk PrismaClient di dev mode
-// agar tidak error "Too many connections" saat hot-reload.
-const prisma = global.prisma || new PrismaClient()
-
-if (process.env.NODE_ENV !== 'production') global.prisma = prisma
+import prisma from '@/libs/prisma'
 
 export async function POST(request, { params }) {
   const session = await getServerSession(authOptions)

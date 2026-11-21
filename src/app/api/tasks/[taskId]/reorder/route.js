@@ -1,19 +1,13 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-
-const prisma = new PrismaClient()
-
-// Fix BigInt serialization
-if (!BigInt.prototype.toJSON) {
-  BigInt.prototype.toJSON = function () {
-    return this.toString()
-  }
-}
+import prisma from '@/libs/prisma'
 
 export async function PATCH(request, context) {
   const session = await getServerSession(authOptions)
+
   if (!session) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
   const params = await context.params
@@ -46,6 +40,7 @@ export async function PATCH(request, context) {
     // 3. Insert into new position
     // Ensure targetIndex is within bounds
     const safeTargetIndex = Math.max(0, Math.min(targetIndex, tasks.length))
+
     tasks.splice(safeTargetIndex, 0, movedTask)
 
     // 4. Update all tasks with their new sortOrder
@@ -63,6 +58,7 @@ export async function PATCH(request, context) {
 
   } catch (error) {
     console.error('Reorder error:', error)
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 })
   }
 }

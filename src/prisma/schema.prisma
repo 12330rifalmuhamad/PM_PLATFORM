@@ -80,6 +80,7 @@ model Board {
   integrations  trIntegration[]
   widgets       DashboardWidget[]
 
+  @@index([workspaceId])
   @@map("mBoard")
 }
 
@@ -100,6 +101,7 @@ model Group {
   board Board @relation(fields: [boardId], references: [boardId], onDelete: Cascade)
   items Task[]
   
+  @@index([boardId, sortOrder])
   @@map("mGroup")
 }
 
@@ -126,6 +128,7 @@ model DashboardWidget {
 
   board Board @relation(fields: [boardId], references: [boardId], onDelete: Cascade)
 
+  @@index([boardId])
   @@map("trDashboardWidget")
 }
 
@@ -187,6 +190,7 @@ model BoardColumn {
   watchedStatusColumns mColumnProgressLink[] @relation("ProgressColumn")
   watchedByProgressColumns mColumnProgressLink[] @relation("StatusColumn")
 
+  @@index([boardId, sortOrder])
   @@map("mBoardColumn")
 }
 
@@ -229,6 +233,7 @@ model trBoardMember {
   mUser User  @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@unique([boardId, userId])
+  @@index([userId])
   @@map("trBoardMember")
 }
 
@@ -259,6 +264,8 @@ model Task {
   activityLog logTaskActivity[]
   updates     trTaskUpdate[]
 
+  @@index([groupId, parentId, sortOrder])
+  @@index([parentId])
   @@map("trTask")
 }
 
@@ -278,6 +285,7 @@ model trTaskValue {
   column BoardColumn @relation(fields: [columnId], references: [columnId], onDelete: Cascade)
 
   @@unique([taskId, columnId])
+  @@index([columnId])
   @@map("trTaskValue")
 }
 
@@ -331,6 +339,7 @@ model trTaskUpdate {
   task Task @relation(fields: [taskId], references: [taskId], onDelete: Cascade)
   user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
+  @@index([taskId, dtmInserted])
   @@map("trTaskUpdate")
 }
 
@@ -356,6 +365,7 @@ model logTaskActivity {
   task  Task? @relation(fields: [taskId], references: [taskId], onDelete: Cascade)
   mUser User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
+  @@index([taskId, dtmInserted])
   @@map("logTaskActivity")
 }
 
@@ -378,6 +388,7 @@ model mColumnOption {
   // Relasi
   column BoardColumn @relation(fields: [columnId], references: [columnId], onDelete: Cascade)
 
+  @@index([columnId, sortOrder])
   @@map("mColumnOption")
 }
 

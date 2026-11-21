@@ -1,15 +1,9 @@
 import { NextResponse } from 'next/server'
 
-import { PrismaClient } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-
-BigInt.prototype.toJSON = function () {
-  return this.toString()
-}
-
-const prisma = new PrismaClient()
+import prisma from '@/libs/prisma'
 
 // FUNGSI PATCH: Untuk meng-update nama grup
 export async function PATCH(request, { params }) {

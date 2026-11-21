@@ -1,16 +1,9 @@
 import { NextResponse } from 'next/server'
 
-import { PrismaClient } from '@prisma/client'
-
 import { getServerSession } from 'next-auth'
 
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-
-BigInt.prototype.toJSON = function () {
-  return this.toString()
-}
-
-const prisma = new PrismaClient()
+import prisma from '@/libs/prisma'
 
 export async function GET(request, { params }) {
   const session = await getServerSession(authOptions)
@@ -41,7 +34,8 @@ export async function GET(request, { params }) {
     return NextResponse.json(task)
   } catch (error) {
     console.error('Failed to fetch task:', error)
-    return NextResponse.json({ message: 'Failed to fetch task', error: error?.message }, { status: 500 })
+    
+return NextResponse.json({ message: 'Failed to fetch task', error: error?.message }, { status: 500 })
   }
 }
 
@@ -83,7 +77,8 @@ export async function PATCH(request, { params }) {
     return NextResponse.json(updatedTask)
   } catch (error) {
     console.error('Failed to update task:', error)
-    return NextResponse.json({ message: 'Failed to update task', error: error?.message }, { status: 500 })
+    
+return NextResponse.json({ message: 'Failed to update task', error: error?.message }, { status: 500 })
   }
 }
 
@@ -102,6 +97,7 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ message: 'Task deleted successfully' })
   } catch (error) {
     console.error('Failed to delete task:', error)
-    return NextResponse.json({ message: 'Failed to delete task', error: error?.message }, { status: 500 })
+    
+return NextResponse.json({ message: 'Failed to delete task', error: error?.message }, { status: 500 })
   }
 }

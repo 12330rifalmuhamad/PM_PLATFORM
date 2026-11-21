@@ -1,16 +1,10 @@
 import { NextResponse } from 'next/server'
 
-import { PrismaClient } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-
-// Handle BigInt serialization
-BigInt.prototype.toJSON = function () {
-  return this.toString()
-}
-
-const prisma = new PrismaClient()
+import prisma from '@/libs/prisma'
+import { getBoardData } from '@/libs/boardData'
 
 export async function GET(request, { params }) {
   const session = await getServerSession(authOptions)
@@ -21,56 +15,13 @@ export async function GET(request, { params }) {
   const userId = parseInt(session.user.id)
 
   try {
-    // 1. Verify access
-    const boardAccess = await prisma.trBoardMember.findFirst({
-      where: { boardId: parseInt(boardId), userId }
-    })
+    const result = await getBoardData(boardId, userId)
 
-    if (!boardAccess) {
-      return NextResponse.json({ message: 'Access denied' }, { status: 403 })
+    if (result.error) {
+      return NextResponse.json({ message: result.error }, { status: result.status })
     }
 
-    // 2. Fetch Board Data with Subitems
-    const board = await prisma.board.findUnique({
-      where: { boardId: parseInt(boardId) },
-      include: {
-        boardMember: { include: { mUser: true } },
-        columns: {
-          orderBy: { sortOrder: 'asc' },
-          include: {
-            options: { orderBy: { sortOrder: 'asc' } },
-            watchedStatusColumns: { include: { statusColumn: true } }
-          }
-        },
-        groups: {
-          orderBy: [{ sortOrder: 'asc' }, { dtmInserted: 'asc' }],
-          include: {
-            items: {
-              // PENTING: Hanya ambil item yang TIDAK punya parent (Top Level Items)
-              // Agar subitem tidak muncul ganda (di luar dan di dalam parent)
-              where: { parentId: null },
-              orderBy: [{ sortOrder: 'asc' }, { dtmInserted: 'asc' }],
-              include: {
-                values: true,
-
-                // PENTING: Include Subitems di sini
-                subItems: {
-                  orderBy: [{ sortOrder: 'asc' }, { dtmInserted: 'asc' }],
-                  include: {
-                    values: true // Subitem juga butuh values (status, person, dll)
-                  }
-                }
-              }
-            }
-          }
-        },
-        widgets: true
-      }
-    })
-
-    if (!board) return NextResponse.json({ message: 'Board not found' }, { status: 404 })
-
-    return NextResponse.json(board)
+    return NextResponse.json(result.data)
   } catch (error) {
     console.error('Failed to fetch board:', error)
 
@@ -109,7 +60,18 @@ export async function PUT(request, { params }) {
 
       // Include struktur yang sama persis dengan GET agar UI sync
       include: {
-        boardMember: { include: { mUser: true } },
+        boardMember: {
+          include: {
+            mUser: {
+              select: {
+                userId: true,
+                userName: true,
+                email: true,
+                txtImage: true
+              }
+            }
+          }
+        },
         columns: {
           orderBy: { sortOrder: 'asc' },
           include: {

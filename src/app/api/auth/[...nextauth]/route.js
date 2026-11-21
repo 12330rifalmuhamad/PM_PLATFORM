@@ -1,14 +1,8 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
-// Patch untuk error serialisasi BigInt
-BigInt.prototype.toJSON = function () {
-  return this.toString()
-}
-
-const prisma = new PrismaClient()
+import prisma from '@/libs/prisma'
 
 // PASTIKAN ADA KATA KUNCI 'export' DI SINI
 export const authOptions = {
@@ -62,6 +56,7 @@ export const authOptions = {
         token.id = user.id
         token.name = user.name
         token.email = user.email
+
         // Instead of storing the whole image, we store a flag or the URL
         token.picture = user.image ? `/api/user/image?t=${Date.now()}` : null
       }
@@ -70,6 +65,7 @@ export const authOptions = {
       if (trigger === 'update' && session?.user) {
         token.name = session.user.name || token.name
         token.email = session.user.email || token.email
+
         // Force the URL with a timestamp to bust cache
         token.picture = `/api/user/image?v=${Date.now()}`
       }

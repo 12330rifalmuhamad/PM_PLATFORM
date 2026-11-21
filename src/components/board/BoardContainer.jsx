@@ -31,13 +31,23 @@ import { useModalStore } from '@/store/useModalStore'
 
 const fetcher = url => fetch(url).then(res => res.json())
 
-export default function BoardContainer({ boardId }) {
+export default function BoardContainer({ boardId, initialBoard }) {
   // Mengatur default activeView ke 'table' agar sesuai dengan 'Main table'
   const [activeView, setActiveView] = useState('table')
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const { data: board, error, isLoading } = useSWR(boardId ? `/api/boards/${boardId}` : null, fetcher)
+  const { data: board, error, isLoading } = useSWR(
+    boardId ? `/api/boards/${boardId}` : null,
+    fetcher,
+    {
+      fallbackData: initialBoard,
+      revalidateOnFocus: false,
+      dedupingInterval: 5000,
+      keepPreviousData: true
+    }
+  )
+
   const { mutate } = useSWRConfig()
   const router = useRouter()
 
@@ -67,6 +77,7 @@ export default function BoardContainer({ boardId }) {
       }
 
       mutate('/api/workspaces')
+
       // Redirect to CRM dashboard which is the safe fallback
       router.push('/dashboards/crm')
     } catch (err) {

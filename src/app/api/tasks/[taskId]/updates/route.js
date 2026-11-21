@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-
-BigInt.prototype.toJSON = function () {
-  return this.toString()
-}
-
-const prisma = new PrismaClient()
+import prisma from '@/libs/prisma'
 
 export async function GET(request, { params }) {
   const session = await getServerSession(authOptions)
+
   if (!session) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
   try {
@@ -20,19 +17,28 @@ export async function GET(request, { params }) {
       where: { taskId: parseInt(taskId) },
       orderBy: { dtmInserted: 'desc' },
       include: {
-        user: true
+        user: {
+          select: {
+            userId: true,
+            userName: true,
+            email: true,
+            txtImage: true
+          }
+        }
       }
     })
 
     return NextResponse.json(updates)
   } catch (error) {
     console.error('Failed to fetch task updates:', error)
-    return NextResponse.json({ message: 'Failed to fetch task updates', error: error?.message }, { status: 500 })
+    
+return NextResponse.json({ message: 'Failed to fetch task updates', error: error?.message }, { status: 500 })
   }
 }
 
 export async function POST(request, { params }) {
   const session = await getServerSession(authOptions)
+
   if (!session) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
   try {
@@ -51,13 +57,23 @@ export async function POST(request, { params }) {
         updateText,
         txtInsertedBy: session.user.name
       },
-      include: { user: true }
+      include: {
+        user: {
+          select: {
+            userId: true,
+            userName: true,
+            email: true,
+            txtImage: true
+          }
+        }
+      }
     })
 
     return NextResponse.json(created, { status: 201 })
   } catch (error) {
     console.error('Failed to create task update:', error)
-    return NextResponse.json({ message: 'Failed to create task update', error: error?.message }, { status: 500 })
+    
+return NextResponse.json({ message: 'Failed to create task update', error: error?.message }, { status: 500 })
   }
 }
 
